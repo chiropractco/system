@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { MapPin, Calendar, ArrowRight } from 'lucide-react';
+import { whatsappUrl } from '../../lib/clinic';
 
 const jornadas = [
   { city: 'Soatá', date: '15-16 Nov', desc: 'Centro Médico Integral, Calle Principal', color: 'from-primary/30 to-primary-container/10' },
@@ -46,9 +47,9 @@ export default function JornadasSection() {
                 <h3 className="text-2xl font-bold mb-2 text-on-surface">{j.city}</h3>
                 <p className="text-on-surface-variant text-sm mb-6">{j.desc}</p>
                 <a
-                  href={`https://wa.me/573112345678?text=Hola%2C%20quiero%20reservar%20cupo%20para%20la%20jornada%20en%20${j.city}`}
+                  href={whatsappUrl(`Hola, quiero reservar cupo para la jornada en ${j.city}`)}
                   target="_blank"
-                  rel="noopener"
+                  rel="noopener noreferrer"
                   className="w-full py-4 border-2 border-primary text-primary font-bold rounded-xl hover:bg-primary hover:text-on-primary transition-all block text-center"
                 >
                   Reserva tu cupo

@@ -7,7 +7,7 @@ export default function WhatsAppFAB() {
     <motion.a
       href={wa.info()}
       target="_blank"
-      rel="noopener"
+      rel="noopener noreferrer"
       className="fixed bottom-8 right-8 z-50 bg-[#25D366] hover:bg-[#20bd5a] text-white p-4 rounded-full shadow-lg shadow-[#25D366]/30 transition-colors group"
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}

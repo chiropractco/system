@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { logger } from '../lib/logger';
 
 export function useTenantData(table, options = {}) {
   const { tenant } = useAuth();
@@ -26,8 +27,8 @@ export function useTenantData(table, options = {}) {
       if (fetchError) throw fetchError;
       setData(rows || []);
     } catch (err) {
-      console.error(`Error fetching ${table}:`, err);
-      setError(err.message);
+      logger.error(`fetch ${table}`, err);
+      setError(err.code || 'fetch_failed');
     } finally {
       setLoading(false);
     }
@@ -45,8 +46,8 @@ export function useTenantData(table, options = {}) {
       .select()
       .single();
     if (insertError) {
-      console.error(`Error inserting ${table}:`, insertError);
-      return { error: insertError.message };
+      logger.error(`insert ${table}`, insertError);
+      return { error: insertError };
     }
     setData((prev) => [row, ...prev]);
     return { data: row };
@@ -60,8 +61,8 @@ export function useTenantData(table, options = {}) {
       .select()
       .single();
     if (updateError) {
-      console.error(`Error updating ${table}:`, updateError);
-      return { error: updateError.message };
+      logger.error(`update ${table}`, updateError);
+      return { error: updateError };
     }
     setData((prev) => prev.map((r) => (r.id === id ? row : r)));
     return { data: row };
@@ -73,8 +74,8 @@ export function useTenantData(table, options = {}) {
       .delete()
       .eq('id', id);
     if (deleteError) {
-      console.error(`Error deleting ${table}:`, deleteError);
-      return { error: deleteError.message };
+      logger.error(`delete ${table}`, deleteError);
+      return { error: deleteError };
     }
     setData((prev) => prev.filter((r) => r.id !== id));
     return { success: true };
@@ -170,7 +171,7 @@ export function useJornadaOfferings(jornadaId) {
       if (fetchError) throw fetchError;
       setOfferings(data || []);
     } catch (err) {
-      console.error('Error fetching jornada_offerings:', err);
+      logger.error('fetch jornada_offerings', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -196,7 +197,10 @@ export function useJornadaOfferings(jornadaId) {
       .insert(record)
       .select('*, services(*), products(*)')
       .single();
-    if (insertError) return { error: insertError.message };
+    if (insertError) {
+      logger.error('insert jornada_offering', insertError);
+      return { error: insertError };
+    }
     setOfferings((prev) => [...prev, data]);
     return { data };
   };
@@ -206,7 +210,10 @@ export function useJornadaOfferings(jornadaId) {
       .from('jornada_offerings')
       .delete()
       .eq('id', id);
-    if (deleteError) return { error: deleteError.message };
+    if (deleteError) {
+      logger.error('delete jornada_offering', deleteError);
+      return { error: deleteError };
+    }
     setOfferings((prev) => prev.filter((o) => o.id !== id));
     return { success: true };
   };
@@ -233,7 +240,7 @@ export function useSales() {
       if (fetchError) throw fetchError;
       setSales(data || []);
     } catch (err) {
-      console.error('Error fetching sales:', err);
+      logger.error('fetch sales', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -266,8 +273,8 @@ export function useSales() {
       .single();
 
     if (saleError) {
-      console.error('Error creating sale:', saleError);
-      return { error: saleError.message };
+      logger.error('create sale', saleError);
+      return { error: saleError };
     }
 
     const itemRecords = items.map((item) => ({
@@ -283,8 +290,9 @@ export function useSales() {
 
     const { error: itemsError } = await supabase.from('sale_items').insert(itemRecords);
     if (itemsError) {
+      logger.error('insert sale_items', itemsError);
       await supabase.from('sales').delete().eq('id', sale.id);
-      return { error: itemsError.message };
+      return { error: itemsError };
     }
 
     for (const item of items) {
@@ -294,7 +302,7 @@ export function useSales() {
           qty: item.quantity,
         });
         if (rpcError) {
-          console.error(`Error descontando stock de ${item.name}:`, rpcError);
+          logger.error(`stock decrement ${item.itemId}`, rpcError);
         }
       }
     }
@@ -310,7 +318,10 @@ export function useSales() {
       .eq('id', id)
       .select()
       .single();
-    if (updateError) return { error: updateError.message };
+    if (updateError) {
+      logger.error('cancel sale', updateError);
+      return { error: updateError };
+    }
     setSales((prev) => prev.map((s) => (s.id === id ? { ...s, ...data } : s)));
     return { data };
   };

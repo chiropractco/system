@@ -1,9 +1,14 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { logger } from '../lib/logger';
 
 const AuthContext = createContext({});
 
 export const useAuth = () => useContext(AuthContext);
+
+// Site URL fija para auth redirects (SEC-005). Si VITE_PUBLIC_SITE_URL
+// no está definida, fallback a window.location.origin (solo dev).
+const SITE_URL = import.meta.env.VITE_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -91,7 +96,7 @@ export function AuthProvider({ children }) {
         setMembership(mem);
       }
     } catch (err) {
-      console.error('Error loading profile/tenant:', err);
+      logger.error('load profile/tenant', err);
     } finally {
       setLoading(false);
     }
@@ -103,7 +108,7 @@ export function AuthProvider({ children }) {
       password,
       options: {
         data: { full_name: fullName },
-        emailRedirectTo: `${window.location.origin}/#crm`,
+        emailRedirectTo: `${SITE_URL}/#crm`,
       },
     });
     if (error) throw error;
@@ -139,7 +144,7 @@ export function AuthProvider({ children }) {
 
   const resetPassword = async (email) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${SITE_URL}/reset-password`,
     });
     if (error) throw error;
   };
@@ -155,65 +160,27 @@ export function AuthProvider({ children }) {
   };
 
   const createTenant = async (name, slug, extra = {}) => {
-    const payload = {
-      name,
-      slug,
-      owner_email: user.email,
-      owner_name: profile?.full_name || user.email,
-      city: extra.city || null,
-      phone: extra.phone || null,
-      plan: extra.plan || 'trial',
-    };
-
-    // Insert tenant with select to get the row back
-    const { data, error } = await supabase
-      .from('tenants')
-      .insert(payload)
-      .select()
-      .single();
-
-    let tenantData;
-    if (error) {
-      if (error.code === '23505') {
-        throw new Error('Esa URL ya está en uso. Elige otra.');
-      }
-      // If select fails due to RLS, try insert without returning and fetch separately
-      const { error: insertErr } = await supabase
-        .from('tenants')
-        .insert(payload);
-      if (insertErr) {
-        if (insertErr.code === '23505') {
-          throw new Error('Esa URL ya está en uso. Elige otra.');
-        }
-        throw insertErr;
-      }
-
-      // Fetch the tenant we just created
-      const { data: tenants } = await supabase
-        .from('tenants')
-        .select('*')
-        .eq('slug', slug);
-      if (!tenants?.length) throw new Error('No se pudo encontrar el consultorio creado');
-      tenantData = tenants[0];
-    } else {
-      tenantData = data;
-    }
-
-    await supabase.from('tenant_memberships').insert({
-      user_id: user.id,
-      tenant_id: tenantData.id,
-      role: 'owner',
-      accepted_at: new Date().toISOString(),
+    // Llamada a RPC transaccional (crea tenant + membership + actualiza profile en una sola tx).
+    const { data, error } = await supabase.rpc('create_tenant_with_owner', {
+      p_name: name,
+      p_slug: slug,
+      p_city: extra.city || null,
+      p_phone: extra.phone || null,
+      p_plan: extra.plan || 'trial',
     });
 
-    await supabase
-      .from('profiles')
-      .update({ default_tenant_id: tenantData.id })
-      .eq('id', user.id);
+    if (error) {
+      if (error.code === '23505' || error.message?.includes('en uso')) {
+        throw new Error('Esa URL ya está en uso. Elige otra.');
+      }
+      logger.error('createTenant', error);
+      throw new Error('No se pudo crear el consultorio. Inténtalo de nuevo.');
+    }
 
-    setTenant(tenantData);
-    setMembership({ role: 'owner', tenant_id: tenantData.id });
-    return tenantData;
+    setTenant(data);
+    setMembership({ role: 'owner', tenant_id: data.id });
+    setProfile((prev) => prev ? { ...prev, default_tenant_id: data.id } : prev);
+    return data;
   };
 
   const updateProfile = async (updates) => {

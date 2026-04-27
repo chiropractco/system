@@ -1,15 +1,8 @@
 // Datos semilla para el consultorio del Dr. Miguel Ángel Díaz.
-// Uso: node scripts/seed-data.js [slug-del-tenant]
+// Uso: node --env-file=.env scripts/seed-data.js [slug-del-tenant]
 // Default: usa el primer tenant encontrado.
 
-import pg from 'pg';
-
-const { Pool } = pg;
-
-const pool = new Pool({
-  connectionString: 'postgresql://postgres.onwgfixvbyknotnbrkgr:Lc6Vj7ItpzB9a9gl@aws-1-us-east-1.pooler.supabase.com:5432/postgres',
-  ssl: { rejectUnauthorized: false },
-});
+import { pool } from './_db.js';
 
 const TENANT_SLUG = process.argv[2] || null;
 

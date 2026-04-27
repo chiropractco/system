@@ -54,7 +54,7 @@ export default function Navbar() {
             <a
               href={wa.schedule()}
               target="_blank"
-              rel="noopener"
+              rel="noopener noreferrer"
               className="clinical-gradient text-on-primary px-6 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 active:scale-95 transition-all"
             >
               Agendar Cita

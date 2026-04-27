@@ -22,14 +22,10 @@ export default function AuthPage() {
         setError('El nombre es obligatorio');
         return;
       }
-      if (password.length < 8) {
-        setError('La contraseña debe tener al menos 8 caracteres');
-        return;
-      }
     }
 
-    if (mode !== 'reset' && password.length < 6) {
-      setError('La contraseña es muy corta');
+    if (mode !== 'reset' && password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres');
       return;
     }
 
@@ -43,18 +39,26 @@ export default function AuthPage() {
         setSuccess('Cuenta creada. Revisa tu email para confirmar.');
       } else if (mode === 'reset') {
         await resetPassword(email);
-        setSuccess('Enlace de recuperación enviado a tu email.');
+        setSuccess('Si la cuenta existe, recibirás un enlace de recuperación en tu correo.');
       }
     } catch (err) {
       const msg = err.message || '';
-      setError(
-        msg.includes('Invalid login') ? 'Email o contraseña incorrectos'
-        : msg.includes('already registered') ? 'Este email ya está registrado'
-        : msg.includes('rate limit') ? 'Demasiados intentos. Espera un momento e inténtalo de nuevo.'
-        : msg.includes('invalid') ? 'Email inválido. Usa un email real.'
-        : msg.includes('Database error') ? 'Error temporal. Inténtalo de nuevo.'
-        : msg || 'Error desconocido'
-      );
+      // Mensajes unificados para evitar enumeración de cuentas (SEC-007).
+      if (msg.includes('rate limit') || msg.includes('Too many')) {
+        setError('Demasiados intentos. Espera un momento e inténtalo de nuevo.');
+      } else if (mode === 'reset') {
+        // Nunca revelamos si el email existe en reset.
+        setSuccess('Si la cuenta existe, recibirás un enlace de recuperación en tu correo.');
+      } else if (mode === 'signup') {
+        setError(
+          msg.includes('already') ? 'No se pudo crear la cuenta. Verifica los datos.'
+          : msg.includes('invalid') || msg.includes('email') ? 'Email inválido. Usa un email real.'
+          : 'No se pudo crear la cuenta. Inténtalo de nuevo.'
+        );
+      } else {
+        // Login: no diferenciar "email no existe" vs "password incorrecto"
+        setError('Credenciales inválidas o cuenta no encontrada.');
+      }
     } finally {
       setLoading(false);
     }
@@ -180,7 +184,7 @@ export default function AuthPage() {
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                     placeholder="••••••••"
                     required
-                    minLength={mode === 'signup' ? 8 : 6}
+                    minLength={8}
                   />
                 </div>
                 {mode === 'signup' && (

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Building2, MapPin, Phone, ArrowRight, Loader2, CheckCircle } from 'lucide-react';
 
@@ -19,6 +19,7 @@ export default function OnboardingPage() {
   const [plan, setPlan] = useState('trial');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const slugDebounceRef = useRef(null);
 
   const handleCreate = async () => {
     setError('');
@@ -57,9 +58,9 @@ export default function OnboardingPage() {
     const cleaned = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
     setSlug(cleaned);
     setSlugStatus(null);
-    clearTimeout(window.__slugDebounce);
+    if (slugDebounceRef.current) clearTimeout(slugDebounceRef.current);
     if (cleaned.length >= 3) {
-      window.__slugDebounce = setTimeout(() => checkSlug(cleaned), 400);
+      slugDebounceRef.current = setTimeout(() => checkSlug(cleaned), 400);
     } else if (cleaned.length > 0) {
       setSlugStatus('invalid');
     }

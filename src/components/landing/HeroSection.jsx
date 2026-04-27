@@ -45,7 +45,7 @@ export default function HeroSection() {
             <a
               href={wa.schedule()}
               target="_blank"
-              rel="noopener"
+              rel="noopener noreferrer"
               className="clinical-gradient text-on-primary px-8 py-4 rounded-xl text-lg font-bold shadow-lg shadow-primary/10 hover:scale-[1.02] active:scale-95 transition-all text-center"
             >
               Agendar Cita

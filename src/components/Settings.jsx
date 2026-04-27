@@ -236,7 +236,7 @@ export default function Settings() {
               <a
                 href={wa.specialist()}
                 target="_blank"
-                rel="noopener"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 mt-3 bg-[#25D366] hover:bg-[#20bd5a] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               >
                 <MessageCircle size={14} /> Contactar por WhatsApp

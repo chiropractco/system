@@ -1,15 +1,9 @@
-import pg from 'pg';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { pool } from './_db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const { Pool } = pg;
-
-const pool = new Pool({
-  connectionString: 'postgresql://postgres.onwgfixvbyknotnbrkgr:Lc6Vj7ItpzB9a9gl@aws-1-us-east-1.pooler.supabase.com:5432/postgres',
-  ssl: { rejectUnauthorized: false },
-});
 
 const NEW_TABLES = ['services', 'products', 'jornada_offerings', 'sales', 'sale_items'];
 

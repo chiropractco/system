@@ -33,7 +33,7 @@ export default function ContactSection() {
                   <Phone size={20} className="text-primary mt-1 shrink-0" />
                   <div>
                     <p className="font-bold text-on-surface">Teléfono / WhatsApp</p>
-                    <a href={wa.info()} target="_blank" rel="noopener" className="text-on-surface-variant text-sm hover:text-primary transition-colors">{clinic.phoneDisplay}</a>
+                    <a href={wa.info()} target="_blank" rel="noopener noreferrer" className="text-on-surface-variant text-sm hover:text-primary transition-colors">{clinic.phoneDisplay}</a>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
@@ -48,7 +48,7 @@ export default function ContactSection() {
                 <a
                   href={wa.schedule()}
                   target="_blank"
-                  rel="noopener"
+                  rel="noopener noreferrer"
                   className="bg-[#25D366] text-white px-8 py-4 rounded-xl font-bold flex items-center gap-2 flex-1 justify-center active:scale-95 transition-transform"
                 >
                   <Phone size={18} /> WhatsApp
@@ -83,7 +83,7 @@ export default function ContactSection() {
               <a
                 href={wa.schedule()}
                 target="_blank"
-                rel="noopener"
+                rel="noopener noreferrer"
                 className="px-10 py-5 bg-tertiary-fixed text-on-tertiary-fixed rounded-full font-extrabold text-lg shadow-2xl hover:scale-105 transition-transform"
               >
                 Agendar Ajuste Ahora
@@ -91,7 +91,7 @@ export default function ContactSection() {
               <a
                 href={wa.specialist()}
                 target="_blank"
-                rel="noopener"
+                rel="noopener noreferrer"
                 className="px-10 py-5 border-2 border-on-primary text-on-primary rounded-full font-extrabold text-lg hover:bg-on-primary/10 transition-colors"
               >
                 Hablar con un Especialista

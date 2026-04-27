@@ -22,10 +22,11 @@ export default function Pacientes() {
   }));
 
   const filtered = patientList.filter((p) => {
+    const q = search.toLowerCase();
     const matchSearch = search === '' ||
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.phone.includes(search) ||
-      p.email.toLowerCase().includes(search.toLowerCase());
+      (p.name || '').toLowerCase().includes(q) ||
+      (p.phone || '').includes(search) ||
+      (p.email || '').toLowerCase().includes(q);
     const matchStatus = filterStatus === 'all' || p.status === filterStatus;
     const matchCity = filterCity === 'all' || p.city === filterCity;
     return matchSearch && matchStatus && matchCity;
@@ -126,7 +127,7 @@ export default function Pacientes() {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
-                      {p.name.split(' ').map((n) => n[0]).join('')}
+                      {(p.name || 'U').split(' ').map((n) => n[0] || '').join('').slice(0, 2)}
                     </div>
                     <div>
                       <p className="text-sm font-medium text-on-surface">{p.name}</p>

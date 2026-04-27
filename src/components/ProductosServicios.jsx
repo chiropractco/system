@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Package, Stethoscope, ShoppingCart, Plus, Edit2, Trash2, X, AlertTriangle, TrendingUp, Calendar, MapPin } from 'lucide-react';
 import { useServices, useProducts, useSales } from '../hooks/useTenantData';
 import { formatCOP, formatShortDate } from '../utils/format';
+import { userFriendlyError } from '../lib/logger';
 
 const SERVICE_CATEGORIES = [
   { value: 'consulta', label: 'Consulta' },
@@ -96,7 +97,7 @@ function ServicesTab() {
       setShowForm(false);
       setEditing(null);
     } else {
-      alert('Error: ' + result.error);
+      alert(userFriendlyError(result.error));
     }
   };
 
@@ -293,7 +294,7 @@ function ProductsTab() {
       setShowForm(false);
       setEditing(null);
     } else {
-      alert('Error: ' + result.error);
+      alert(userFriendlyError(result.error));
     }
   };
 
@@ -557,7 +558,7 @@ function SalesTab() {
     if (!result.error) {
       setShowForm(false);
     } else {
-      alert('Error: ' + result.error);
+      alert(userFriendlyError(result.error));
     }
   };
 

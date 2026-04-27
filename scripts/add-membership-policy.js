@@ -1,9 +1,4 @@
-import pg from 'pg';
-
-const pool = new pg.Pool({
-  connectionString: 'postgresql://postgres.onwgfixvbyknotnbrkgr:Lc6Vj7ItpzB9a9gl@aws-1-us-east-1.pooler.supabase.com:5432/postgres',
-  ssl: { rejectUnauthorized: false },
-});
+import { pool } from './_db.js';
 
 async function run() {
   const client = await pool.connect();

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { useIdleTimeout } from './hooks/useIdleTimeout';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import Pacientes from './components/Pacientes';
@@ -27,6 +28,14 @@ import LegalPage from './components/landing/LegalPage';
 function CRMApp() {
   const [activeModule, setActiveModule] = useState('dashboard');
   const { alerts } = useAlerts();
+  const { signOut } = useAuth();
+
+  const handleIdleLogout = useCallback(() => {
+    signOut().catch(() => {});
+  }, [signOut]);
+
+  // Cierra sesión tras 30 min sin actividad (SEC-020)
+  useIdleTimeout(handleIdleLogout, 30 * 60 * 1000);
 
   const renderModule = () => {
     switch (activeModule) {
