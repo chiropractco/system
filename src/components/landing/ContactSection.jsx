@@ -105,8 +105,8 @@ export default function ContactSection() {
       <footer className="w-full border-t border-outline-variant/20">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 px-8 py-16 max-w-7xl mx-auto">
           <div className="space-y-6">
-            <div className="text-lg font-bold text-primary tracking-tight">Clinical Sanctuary</div>
-            <p className="text-sm text-on-surface-variant">Precision clínica para la restauración del movimiento humano. Especialistas en salud espinal.</p>
+            <img src="/logos/v1-spine-mark.svg" alt="chiropract.co" className="h-10 w-auto" />
+            <p className="text-sm text-on-surface-variant">Precisión clínica para la restauración del movimiento humano. Especialistas en salud espinal.</p>
           </div>
           <div>
             <h4 className="font-bold mb-6 text-on-surface">Recursos</h4>

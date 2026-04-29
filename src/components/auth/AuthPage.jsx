@@ -69,13 +69,8 @@ export default function AuthPage() {
       {/* Left panel - Branding */}
       <div className="hidden lg:flex lg:w-1/2 clinical-gradient text-on-primary flex-col justify-between p-12">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-on-primary/20 flex items-center justify-center">
-              <ShieldCheck size={24} />
-            </div>
-            <span className="text-2xl font-bold tracking-tight">Clinical Sanctuary</span>
-          </div>
-          <p className="text-on-primary/70 text-sm">by chiropract.co</p>
+          <img src="/logos/v1-light.svg" alt="chiropract.co" className="h-10 w-auto mb-2" />
+          <p className="text-on-primary/70 text-sm">Salud espinal de precisión</p>
         </div>
 
         <div className="space-y-8">
@@ -111,11 +106,8 @@ export default function AuthPage() {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-8">
           <div className="lg:hidden text-center mb-8">
-            <div className="inline-flex items-center gap-2 text-primary mb-2">
-              <ShieldCheck size={28} />
-              <span className="text-2xl font-bold tracking-tight">Clinical Sanctuary</span>
-            </div>
-            <p className="text-on-surface-variant text-sm">by chiropract.co</p>
+            <img src="/logos/v1-spine-mark.svg" alt="chiropract.co" className="h-10 w-auto mx-auto mb-2" />
+            <p className="text-on-surface-variant text-sm">Salud espinal de precisión</p>
           </div>
 
           <div>

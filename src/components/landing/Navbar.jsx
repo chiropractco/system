@@ -37,8 +37,8 @@ export default function Navbar() {
 
       <nav className="fixed top-0 w-full z-40 glass-nav shadow-sm">
         <div className="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto">
-          <a href="#hero" className="text-xl font-bold tracking-tighter text-primary">
-            {clinic.name}
+          <a href="#hero" className="flex items-center" aria-label={clinic.name}>
+            <img src="/logos/v1-spine-mark.svg" alt="chiropract.co" className="h-9 w-auto" />
           </a>
 
           <div className="hidden md:flex items-center gap-8">

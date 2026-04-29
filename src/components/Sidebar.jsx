@@ -35,10 +35,8 @@ export default function Sidebar({ activeModule, onNavigate, alerts }) {
       >
         {/* Header */}
         <div className="p-6 border-b border-white/10">
-          <h1 className="text-xl font-bold tracking-tight">
-            <span className="text-primary-light">Clinical</span> Sanctuary
-          </h1>
-          <p className="text-xs text-white/60 mt-1">{tenant?.name || 'CRM — Gestión Integral'}</p>
+          <img src="/logos/v1-light.svg" alt="chiropract.co" className="h-9 w-auto" />
+          <p className="text-xs text-white/60 mt-3">{tenant?.name || 'CRM — Gestión Integral'}</p>
           {tenant?.plan && (
             <span className="mt-2 inline-flex items-center gap-1 text-[10px] bg-primary/20 text-primary-light px-2 py-0.5 rounded-full font-bold uppercase">
               <Globe size={10} /> {tenant.plan}
