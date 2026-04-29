@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80">
+  <!-- V2: Pulse Geometric — más SaaS, abstracto, dinámico -->
+  <defs>
+    <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f766e"/>
+      <stop offset="100%" stop-color="#005c55"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Geometric mark: stacked diamonds suggesting alignment -->
+  <g transform="translate(12 18)">
+    <!-- Background rounded square -->
+    <rect x="0" y="0" width="44" height="44" rx="11" fill="url(#g2)"/>
+
+    <!-- Inner shape: 3 horizontal lines getting wider (like a pulse / stacking pattern) -->
+    <rect x="14" y="11" width="16" height="3" rx="1.5" fill="#ffffff" opacity="0.95"/>
+    <rect x="10" y="20.5" width="24" height="3" rx="1.5" fill="#ffffff"/>
+    <rect x="14" y="30" width="16" height="3" rx="1.5" fill="#ffffff" opacity="0.95"/>
+
+    <!-- Subtle accent dot -->
+    <circle cx="22" cy="22" r="1.8" fill="#9cf2e8"/>
+  </g>
+
+  <!-- Wordmark -->
+  <g transform="translate(72 0)">
+    <text x="0" y="42" font-family="'Inter', -apple-system, system-ui, sans-serif" font-weight="800" font-size="28" fill="#131b2e" letter-spacing="-1.2">chiropract</text>
+    <text x="161" y="42" font-family="'Inter', -apple-system, system-ui, sans-serif" font-weight="400" font-size="28" fill="#005c55" letter-spacing="-1.2">.co</text>
+    <text x="0" y="60" font-family="'Inter', -apple-system, system-ui, sans-serif" font-weight="500" font-size="10" fill="#3e4947" letter-spacing="2.4">SPINE CARE PLATFORM</text>
+  </g>
+</svg>
