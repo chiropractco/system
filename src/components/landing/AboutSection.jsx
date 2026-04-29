@@ -13,14 +13,11 @@ export default function AboutSection() {
           viewport={{ once: true }}
         >
           <div className="rounded-xl overflow-hidden shadow-2xl grayscale hover:grayscale-0 transition-all duration-700">
-            <div className="w-full aspect-[4/5] bg-gradient-to-br from-primary/20 via-primary-container/10 to-surface-container flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-32 h-32 rounded-full clinical-gradient flex items-center justify-center mx-auto mb-4">
-                  <span className="text-5xl font-bold text-on-primary">MD</span>
-                </div>
-                <p className="text-on-surface-variant text-sm font-medium">Dr. Miguel Ángel Díaz</p>
-              </div>
-            </div>
+            <img
+              src="/images/dr-diaz/01-portrait-formal.jpg"
+              alt="Dr. Miguel Ángel Díaz"
+              className="w-full aspect-[4/5] object-cover"
+            />
           </div>
           <div className="absolute top-12 -right-4 glass-card p-5 rounded-xl border border-white/20 shadow-lg hidden lg:block">
             <div className="flex items-center gap-3">

@@ -1,11 +1,12 @@
 import { motion } from 'framer-motion';
-import { MapPin, Calendar, ArrowRight } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { whatsappUrl } from '../../lib/clinic';
 
 const jornadas = [
-  { city: 'Soatá', date: '15-16 Nov', desc: 'Centro Médico Integral, Calle Principal', color: 'from-primary/30 to-primary-container/10' },
-  { city: 'Muzo', date: '22 Nov', desc: 'Salón Comunal - Sector Centro', color: 'from-secondary/20 to-secondary-container/10' },
-  { city: 'Chiquinquirá', date: '29 Nov', desc: 'Consultorio 302, Edificio Alianza', color: 'from-tertiary/20 to-tertiary-container/10' },
+  { city: 'Soatá', date: 'Mensual', desc: 'Centro médico integral · plaza principal', image: '/images/jornadas/soata.jpg' },
+  { city: 'Guamal', date: 'Bimensual', desc: 'Salón comunal · sector centro', image: '/images/jornadas/guamal.jpg' },
+  { city: 'Muzo', date: 'Bimensual', desc: 'Atención a comunidad esmeraldera', image: '/images/jornadas/muzo.jpg' },
+  { city: 'Garcés Navas', date: 'Mensual', desc: 'Consultorio descentralizado en Bogotá', image: '/images/jornadas/garces-navas.jpg' },
 ];
 
 export default function JornadasSection() {
@@ -14,7 +15,7 @@ export default function JornadasSection() {
       <div className="container mx-auto px-8 max-w-7xl">
         <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-16">
           <div className="max-w-xl">
-            <h2 className="text-4xl font-bold tracking-tight mb-4 text-on-surface">Próximas Jornadas en Boyacá</h2>
+            <h2 className="text-4xl font-bold tracking-tight mb-4 text-on-surface">Próximas Jornadas en Boyacá y Bogotá</h2>
             <p className="text-on-surface-variant">Llevamos la atención de alta calidad a tu comunidad. Reserva tu cupo con anticipación, los espacios son limitados.</p>
           </div>
           <div className="flex gap-4">
@@ -25,7 +26,7 @@ export default function JornadasSection() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {jornadas.map((j, i) => (
             <motion.div
               key={j.city}
@@ -35,24 +36,31 @@ export default function JornadasSection() {
               transition={{ duration: 0.5, delay: i * 0.1 }}
               viewport={{ once: true }}
             >
-              <div className={`h-48 overflow-hidden relative bg-gradient-to-br ${j.color}`}>
-                <div className="w-full h-full flex items-center justify-center">
-                  <MapPin size={48} className="text-primary/30" />
-                </div>
-                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-lg text-sm font-bold shadow-sm text-on-surface">
+              <div className="h-44 overflow-hidden relative">
+                <img
+                  src={j.image}
+                  alt={j.city}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-lg text-xs font-bold shadow-sm text-on-surface">
                   {j.date}
                 </div>
               </div>
-              <div className="p-8">
-                <h3 className="text-2xl font-bold mb-2 text-on-surface">{j.city}</h3>
-                <p className="text-on-surface-variant text-sm mb-6">{j.desc}</p>
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <MapPin size={16} className="text-primary" />
+                  <h3 className="text-xl font-bold text-on-surface">{j.city}</h3>
+                </div>
+                <p className="text-on-surface-variant text-sm mb-5">{j.desc}</p>
                 <a
                   href={whatsappUrl(`Hola, quiero reservar cupo para la jornada en ${j.city}`)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-4 border-2 border-primary text-primary font-bold rounded-xl hover:bg-primary hover:text-on-primary transition-all block text-center"
+                  className="w-full py-3 border-2 border-primary text-primary font-bold rounded-xl hover:bg-primary hover:text-on-primary transition-all block text-center text-sm"
                 >
-                  Reserva tu cupo
+                  Reservar cupo
                 </a>
               </div>
             </motion.div>

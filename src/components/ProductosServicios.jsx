@@ -355,9 +355,18 @@ function ProductsTab() {
                 return (
                   <tr key={p.id} className="border-t border-outline-variant hover:bg-surface-container-low">
                     <td className="px-4 py-3">
-                      <div>
-                        <p className="font-medium text-on-surface">{p.name}</p>
-                        {p.sku && <p className="text-xs text-on-surface-variant">SKU: {p.sku}</p>}
+                      <div className="flex items-center gap-3">
+                        {p.image_url ? (
+                          <img src={p.image_url} alt={p.name} className="w-10 h-10 rounded-lg object-cover bg-surface-container-low flex-shrink-0" loading="lazy" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-surface-container-low flex-shrink-0 flex items-center justify-center text-on-surface-variant">
+                            <Package size={16} />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="font-medium text-on-surface truncate">{p.name}</p>
+                          {p.sku && <p className="text-xs text-on-surface-variant">SKU: {p.sku}</p>}
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm text-on-surface-variant">{cat?.label || p.category}</td>

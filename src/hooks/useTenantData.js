@@ -328,3 +328,64 @@ export function useSales() {
 
   return { sales, loading, error, createSale, cancelSale, refetchSales: fetchSales };
 }
+
+export function usePayments() {
+  const { tenant } = useAuth();
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchPayments = useCallback(async () => {
+    if (!tenant?.id) return;
+    setLoading(true);
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('payments')
+        .select('*, patients(full_name)')
+        .eq('tenant_id', tenant.id)
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (fetchError) throw fetchError;
+      setPayments(data || []);
+    } catch (err) {
+      logger.error('fetch payments', err);
+      setError(err.code || 'fetch_failed');
+    } finally {
+      setLoading(false);
+    }
+  }, [tenant?.id]);
+
+  useEffect(() => {
+    fetchPayments();
+  }, [fetchPayments]);
+
+  // Genera un link de pago Wompi llamando a la Edge Function
+  const createPaymentLink = async ({ amount, description, patientId, appointmentId, jornadaId, customerEmail, customerPhone }) => {
+    if (!tenant?.id) return { error: { message: 'No tenant' } };
+    try {
+      const { data, error } = await supabase.functions.invoke('wompi-create-link', {
+        body: {
+          tenant_id: tenant.id,
+          amount,
+          description,
+          patient_id: patientId || null,
+          appointment_id: appointmentId || null,
+          jornada_id: jornadaId || null,
+          customer_email: customerEmail || null,
+          customer_phone: customerPhone || null,
+        },
+      });
+      if (error) {
+        logger.error('createPaymentLink', error);
+        return { error };
+      }
+      await fetchPayments();
+      return { data };
+    } catch (err) {
+      logger.error('createPaymentLink exception', err);
+      return { error: err };
+    }
+  };
+
+  return { payments, loading, error, createPaymentLink, refetchPayments: fetchPayments };
+}

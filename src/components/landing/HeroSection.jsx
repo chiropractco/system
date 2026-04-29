@@ -67,18 +67,12 @@ export default function HeroSection() {
             transition={{ duration: 1, delay: 0.8 }}
           >
             <div className="absolute -inset-4 bg-primary/5 rounded-[2rem] blur-2xl" />
-            <div className="relative aspect-square max-w-md rounded-[2rem] overflow-hidden shadow-2xl">
-              <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary-container/10 to-surface flex items-center justify-center">
-                <div className="text-center space-y-4">
-                  <div className="w-20 h-20 rounded-full clinical-gradient flex items-center justify-center text-on-primary mx-auto">
-                    <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.37.747A2.25 2.25 0 0116.559 17H7.441a2.25 2.25 0 01-.871-.953L5 14.5m14.8.8l1.402 1.152a1.5 1.5 0 01-.42 2.61l-2.1.672a1.5 1.5 0 01-1.256-.218l-.75-.507M5 14.5l-1.402 1.152a1.5 1.5 0 00.42 2.61l2.1.672a1.5 1.5 0 001.256-.218l.75-.507m6.852-2.507l-.75.507m-6.852-2.507l.75.507" />
-                    </svg>
-                  </div>
-                  <p className="text-on-surface-variant text-sm font-medium">Spine Animation</p>
-                  <p className="text-on-surface-variant/60 text-xs">Scroll to explore</p>
-                </div>
-              </div>
+            <div className="relative aspect-[4/5] max-w-md rounded-[2rem] overflow-hidden shadow-2xl">
+              <img
+                src="/images/dr-diaz/07-portrait-hero.jpg"
+                alt="Dr. Miguel Ángel Díaz"
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="absolute -bottom-6 -left-6 bg-surface-container-lowest p-6 rounded-2xl shadow-xl z-20 flex items-center gap-4">
               <div className="w-12 h-12 rounded-full clinical-gradient flex items-center justify-center text-on-primary">
