@@ -59,30 +59,30 @@ export default function HeroSection() {
           </motion.div>
         </div>
 
-        <div className="relative hidden md:flex items-center justify-center">
+        <div className="relative flex items-center justify-center mt-8 md:mt-0">
           <motion.div
-            className="relative"
+            className="relative w-full"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, delay: 0.8 }}
+            transition={{ duration: 1, delay: 0.4 }}
           >
             <div className="absolute -inset-4 bg-primary/5 rounded-[2rem] blur-2xl" />
-            <div className="relative aspect-[4/5] max-w-md rounded-[2rem] overflow-hidden shadow-2xl">
+            <div className="relative aspect-[4/5] max-w-md mx-auto rounded-[2rem] overflow-hidden shadow-2xl">
               <img
                 src="/images/dr-diaz/07-portrait-hero.jpg"
                 alt="Dr. Miguel Ángel Díaz"
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="absolute -bottom-6 -left-6 bg-surface-container-lowest p-6 rounded-2xl shadow-xl z-20 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full clinical-gradient flex items-center justify-center text-on-primary">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="absolute -bottom-4 -left-2 md:-bottom-6 md:-left-6 bg-surface-container-lowest p-4 md:p-6 rounded-2xl shadow-xl z-20 flex items-center gap-3 md:gap-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full clinical-gradient flex items-center justify-center text-on-primary">
+                <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
                 </svg>
               </div>
               <div>
-                <div className="text-2xl font-bold text-on-surface">15+ Años</div>
-                <div className="text-sm text-on-surface-variant uppercase tracking-wider font-semibold">Experiencia</div>
+                <div className="text-lg md:text-2xl font-bold text-on-surface">15+ Años</div>
+                <div className="text-xs md:text-sm text-on-surface-variant uppercase tracking-wider font-semibold">Experiencia</div>
               </div>
             </div>
           </motion.div>
