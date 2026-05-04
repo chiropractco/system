@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { Plus, X, Calendar, Car, Users, DollarSign, FileText, CheckCircle, XCircle } from 'lucide-react';
 import { formatCOP, formatDate } from '../utils/format';
 import { useJornadas } from '../hooks/useTenantData';
+import { useToast } from './Toast';
+import { userFriendlyError } from '../lib/logger';
 
 export default function Jornadas() {
   const { jornadas, loading, insertJornada, updateJornada } = useJornadas();
+  const toast = useToast();
   const [showNewForm, setShowNewForm] = useState(false);
   const [selectedJornada, setSelectedJornada] = useState(null);
   const [tab, setTab] = useState('proximas');
@@ -16,7 +19,7 @@ export default function Jornadas() {
   const price = (j) => j.price_per_patient ?? j.pricePerPatient ?? 150000;
 
   const capacityColor = (b, capacity) => {
-    const pct = b / capacity;
+    const pct = capacity > 0 ? b / capacity : 0;
     if (pct >= 0.8) return 'text-danger';
     if (pct >= 0.5) return 'text-accent';
     return 'text-primary';
@@ -95,7 +98,7 @@ export default function Jornadas() {
                     booked(j) / j.capacity >= 0.8 ? 'bg-danger' :
                     booked(j) / j.capacity >= 0.5 ? 'bg-accent' : 'bg-primary'
                   }`}
-                  style={{ width: `${(booked(j) / j.capacity) * 100}%` }}
+                  style={{ width: `${j.capacity > 0 ? (booked(j) / j.capacity) * 100 : 0}%` }}
                 />
               </div>
               <p className="text-xs text-on-surface-variant/70">{j.notes}</p>
@@ -160,7 +163,7 @@ export default function Jornadas() {
                   className={`h-3 rounded-full ${
                     booked(selectedJornada) / selectedJornada.capacity >= 0.8 ? 'bg-danger' : 'bg-primary'
                   }`}
-                  style={{ width: `${(booked(selectedJornada) / selectedJornada.capacity) * 100}%` }}
+                  style={{ width: `${selectedJornada.capacity > 0 ? (booked(selectedJornada) / selectedJornada.capacity) * 100 : 0}%` }}
                 />
               </div>
               <div className="bg-surface-container-low rounded-lg p-4">
@@ -195,13 +198,15 @@ export default function Jornadas() {
             <form className="space-y-4" onSubmit={async (e) => {
               e.preventDefault();
               const form = e.target;
-              await insertJornada({
+              const r = await insertJornada({
                 city: form.city.value,
                 date: form.date.value,
                 capacity: parseInt(form.capacity.value) || 15,
                 price_per_patient: parseInt(form.price.value) || 150000,
                 notes: form.notes.value || null,
               });
+              if (r.error) { toast.error(userFriendlyError(r.error)); return; }
+              toast.success('Jornada creada');
               setShowNewForm(false);
             }}>
               <div>

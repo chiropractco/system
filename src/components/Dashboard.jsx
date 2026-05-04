@@ -110,7 +110,7 @@ export default function Dashboard({ onNavigate }) {
                     </p>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-on-surface">{apt.patientName}</p>
+                    <p className="text-sm font-medium text-on-surface">{apt.patient_name}</p>
                     <p className="text-xs text-on-surface-variant/70 capitalize">{apt.location === 'consultorio' ? 'Consultorio' : apt.location}</p>
                   </div>
                   <span className={`text-xs px-2 py-1 rounded-full font-medium ${
@@ -126,7 +126,7 @@ export default function Dashboard({ onNavigate }) {
           )}
           <div className="mt-4 pt-3 border-t border-outline-variant flex justify-between text-sm">
             <span className="text-on-surface-variant">Total: {todayAppointments.length} citas</span>
-            <span className="font-semibold text-primary">{formatCOP(todayAppointments.reduce((s, a) => s + a.price, 0))}</span>
+            <span className="font-semibold text-primary">{formatCOP(todayAppointments.reduce((s, a) => s + (a.price || 0), 0))}</span>
           </div>
         </div>
 

@@ -2,11 +2,14 @@ import { useState } from 'react';
 import { TrendingUp, AlertTriangle, Building2, MapPin, ArrowUpRight, ArrowDownRight, Plus, X } from 'lucide-react';
 import { formatCOP } from '../utils/format';
 import { useTransactions, useAppointments, usePatients } from '../hooks/useTenantData';
+import { useToast } from './Toast';
+import { userFriendlyError } from '../lib/logger';
 
 export default function Finanzas() {
   const { transactions, loading, insertTransaction } = useTransactions();
   const { appointments } = useAppointments();
   const { patients } = usePatients();
+  const toast = useToast();
   const [showNewForm, setShowNewForm] = useState(false);
 
   const incomes = transactions.filter((t) => t.type === 'income');
@@ -132,7 +135,7 @@ export default function Finanzas() {
                   <span className="text-sm font-bold text-primary">{formatCOP(incomeBySource.consultorio)}</span>
                 </div>
                 <div className="w-full bg-surface-container rounded-full h-2">
-                  <div className="bg-primary h-2 rounded-full" style={{ width: `${(incomeBySource.consultorio / monthIncome) * 100}%` }} />
+                  <div className="bg-primary h-2 rounded-full" style={{ width: `${monthIncome > 0 ? (incomeBySource.consultorio / monthIncome) * 100 : 0}%` }} />
                 </div>
               </div>
             </div>
@@ -146,7 +149,7 @@ export default function Finanzas() {
                   <span className="text-sm font-bold text-accent">{formatCOP(incomeBySource.jornadas)}</span>
                 </div>
                 <div className="w-full bg-surface-container rounded-full h-2">
-                  <div className="bg-accent h-2 rounded-full" style={{ width: `${(incomeBySource.jornadas / monthIncome) * 100}%` }} />
+                  <div className="bg-accent h-2 rounded-full" style={{ width: `${monthIncome > 0 ? (incomeBySource.jornadas / monthIncome) * 100 : 0}%` }} />
                 </div>
               </div>
             </div>
@@ -164,7 +167,7 @@ export default function Finanzas() {
                 <div key={city} className="flex items-center gap-3">
                   <span className="text-sm text-on-surface w-24">{city}</span>
                   <div className="flex-1 bg-surface-container rounded-full h-2">
-                    <div className="bg-primary h-2 rounded-full" style={{ width: `${(income / maxIncome) * 100}%` }} />
+                    <div className="bg-primary h-2 rounded-full" style={{ width: `${maxIncome > 0 ? (income / maxIncome) * 100 : 0}%` }} />
                   </div>
                   <span className="text-sm font-medium text-on-surface min-w-[90px] text-right">{formatCOP(income)}</span>
                 </div>
@@ -201,10 +204,10 @@ export default function Finanzas() {
         ) : (
           <div className="space-y-2">
             {debtors.map((d) => (
-              <div key={d.patientId} className="flex items-center justify-between p-3 bg-surface-container-low rounded-lg">
+              <div key={d.patient_id || d.patientId} className="flex items-center justify-between p-3 bg-surface-container-low rounded-lg">
                 <div>
-                  <p className="text-sm font-medium text-on-surface">{d.patientName}</p>
-                  <p className="text-xs text-on-surface-variant/70">Vencimiento: {d.dueDate}</p>
+                  <p className="text-sm font-medium text-on-surface">{d.patient_name || d.patientName}</p>
+                  <p className="text-xs text-on-surface-variant/70">Vencimiento: {d.due_date || d.dueDate}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold text-danger">{formatCOP(d.amount)}</p>
@@ -237,7 +240,7 @@ export default function Finanzas() {
             <form className="space-y-4" onSubmit={async (e) => {
               e.preventDefault();
               const form = e.target;
-              await insertTransaction({
+              const r = await insertTransaction({
                 type: 'income',
                 amount: parseInt(form.amount.value, 10),
                 category: form.category.value,
@@ -245,6 +248,8 @@ export default function Finanzas() {
                 patient_id: form.patient_id.value || null,
                 date: form.date.value,
               });
+              if (r.error) { toast.error(userFriendlyError(r.error)); return; }
+              toast.success('Transacción registrada');
               setShowNewForm(false);
             }}>
               <div>

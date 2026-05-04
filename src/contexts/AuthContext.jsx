@@ -16,34 +16,45 @@ export function AuthProvider({ children }) {
   const [tenant, setTenant] = useState(null);
   const [membership, setMembership] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [tenantLoading, setTenantLoading] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser(session.user);
-        loadProfileAndTenant(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
+    let lastLoadedUserId = null;
+    let mounted = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const handleSession = (session, eventName) => {
+      if (!mounted) return;
       if (session?.user) {
         setUser(session.user);
-        loadProfileAndTenant(session.user.id);
+        // Solo recargar profile/tenant si cambió el user real (no en TOKEN_REFRESHED).
+        if (lastLoadedUserId !== session.user.id || eventName === 'SIGNED_IN' || eventName === 'INITIAL') {
+          lastLoadedUserId = session.user.id;
+          loadProfileAndTenant(session.user.id);
+        } else {
+          // TOKEN_REFRESHED del mismo user — no resetear tenant ni mostrar loader.
+          setLoading(false);
+        }
       } else {
+        lastLoadedUserId = null;
         setUser(null);
         setProfile(null);
         setTenant(null);
         setMembership(null);
         setLoading(false);
+        setTenantLoading(false);
       }
+    };
+
+    supabase.auth.getSession().then(({ data: { session } }) => handleSession(session, 'INITIAL'));
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      handleSession(session, event);
     });
 
-    return () => subscription.unsubscribe();
+    return () => { mounted = false; subscription.unsubscribe(); };
   }, []);
 
-  const ensureProfile = async (userId, fullName) => {
+  const ensureProfile = async (userId, fullName, email) => {
     const { data: existing } = await supabase
       .from('profiles')
       .select('id')
@@ -58,6 +69,7 @@ export function AuthProvider({ children }) {
   };
 
   const loadProfileAndTenant = async (userId) => {
+    setTenantLoading(true);
     try {
       let { data: prof } = await supabase
         .from('profiles')
@@ -79,26 +91,36 @@ export function AuthProvider({ children }) {
       }
 
       if (prof?.default_tenant_id) {
-        const { data: ten } = await supabase
+        // maybeSingle() no lanza si retorna 0 filas (RLS, fila borrada, etc.)
+        const { data: ten, error: tenErr } = await supabase
           .from('tenants')
           .select('*')
           .eq('id', prof.default_tenant_id)
-          .single();
+          .maybeSingle();
 
         const { data: mem } = await supabase
           .from('tenant_memberships')
           .select('*')
           .eq('user_id', userId)
           .eq('tenant_id', prof.default_tenant_id)
-          .single();
+          .maybeSingle();
 
-        setTenant(ten);
-        setMembership(mem);
+        if (tenErr) {
+          logger.error('load tenant', tenErr);
+        }
+
+        setTenant(ten || null);
+        setMembership(mem || null);
+      } else {
+        // El profile no tiene tenant asignado — no es un fallo, es estado válido (= ir a onboarding)
+        setTenant(null);
+        setMembership(null);
       }
     } catch (err) {
       logger.error('load profile/tenant', err);
     } finally {
       setLoading(false);
+      setTenantLoading(false);
     }
   };
 
@@ -134,12 +156,17 @@ export function AuthProvider({ children }) {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    setUser(null);
-    setProfile(null);
-    setTenant(null);
-    setMembership(null);
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      logger.error('signOut', err);
+    } finally {
+      // SIEMPRE limpiar estado local, aunque la API falle (red caída, etc.)
+      setUser(null);
+      setProfile(null);
+      setTenant(null);
+      setMembership(null);
+    }
   };
 
   const resetPassword = async (email) => {
@@ -213,6 +240,7 @@ export function AuthProvider({ children }) {
     tenant,
     membership,
     loading,
+    tenantLoading,
     signUp,
     signIn,
     signOut,

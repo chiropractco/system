@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ToastProvider } from './components/Toast';
 import { useIdleTimeout } from './hooks/useIdleTimeout';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
@@ -89,7 +90,7 @@ function getViewFromHash() {
 }
 
 function AppRouter() {
-  const { user, tenant, loading } = useAuth();
+  const { user, tenant, profile, loading, tenantLoading } = useAuth();
   const [view, setView] = useState(getViewFromHash);
 
   useEffect(() => {
@@ -128,8 +129,38 @@ function AppRouter() {
     return <LandingApp />;
   }
 
-  // User is authenticated but has no tenant → onboarding
+  // Mientras carga el tenant del usuario logueado, mostrar loader (no flash de onboarding)
+  if (tenantLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full clinical-gradient flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <svg className="w-6 h-6 text-on-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3" />
+            </svg>
+          </div>
+          <p className="text-on-surface-variant text-sm">Cargando tu consultorio...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // El profile ya cargó. Si NO tiene default_tenant_id → ir a onboarding (real, no por bug).
+  // Si tiene default_tenant_id pero el tenant es null → la consulta falló (RLS, deleted, etc.)
   if (!tenant) {
+    if (profile?.default_tenant_id) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center p-8">
+          <div className="text-center max-w-md">
+            <p className="text-lg font-bold text-on-surface mb-2">No pudimos cargar tu consultorio</p>
+            <p className="text-on-surface-variant text-sm mb-6">Verifica tu conexión a internet o intenta cerrar sesión y volver a entrar.</p>
+            <button onClick={() => window.location.reload()} className="bg-primary hover:bg-primary-light text-on-primary px-6 py-3 rounded-lg font-medium">
+              Reintentar
+            </button>
+          </div>
+        </div>
+      );
+    }
     return <OnboardingPage />;
   }
 
@@ -140,7 +171,9 @@ function AppRouter() {
 function App() {
   return (
     <AuthProvider>
-      <AppRouter />
+      <ToastProvider>
+        <AppRouter />
+      </ToastProvider>
     </AuthProvider>
   );
 }

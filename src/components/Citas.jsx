@@ -2,10 +2,13 @@ import { useState } from 'react';
 import { Plus, X, Clock, MapPin, ChevronLeft, ChevronRight, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { appointmentTypes, formatCOP, formatDate } from '../utils/format';
 import { useAppointments, usePatients } from '../hooks/useTenantData';
+import { useToast } from './Toast';
+import { userFriendlyError } from '../lib/logger';
 
 export default function Citas() {
   const { appointments, loading, insertAppointment, updateAppointment } = useAppointments();
   const { patients } = usePatients();
+  const toast = useToast();
   const [view, setView] = useState('today');
   const [showNewForm, setShowNewForm] = useState(false);
   const todayStr = new Date().toISOString().split('T')[0];
@@ -95,7 +98,7 @@ export default function Citas() {
           <p className="text-xs text-on-surface-variant">Pendientes</p>
         </div>
         <div className="bg-surface-container-lowest rounded-xl p-4 shadow-clinical border border-outline-variant text-center">
-          <p className="text-2xl font-bold text-primary">{formatCOP(activeApts.reduce((s, a) => s + a.price, 0))}</p>
+          <p className="text-2xl font-bold text-primary">{formatCOP(activeApts.reduce((s, a) => s + (a.price || 0), 0))}</p>
           <p className="text-xs text-on-surface-variant">Ingreso proyectado</p>
         </div>
       </div>
@@ -117,7 +120,7 @@ export default function Citas() {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-on-surface">{apt.patientName}</p>
+                      <p className="text-sm font-medium text-on-surface">{apt.patient_name}</p>
                       {statusIcon(apt.status)}
                     </div>
                     <div className="flex items-center gap-3 mt-1 text-xs text-on-surface-variant/70">
@@ -126,7 +129,7 @@ export default function Citas() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium text-on-surface">{formatCOP(apt.price)}</p>
+                    <p className="text-sm font-medium text-on-surface">{formatCOP(apt.price || 0)}</p>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                       apt.status === 'confirmada' ? 'bg-green-100 text-green-700' :
                       apt.status === 'pendiente' ? 'bg-yellow-100 text-yellow-700' :
@@ -154,7 +157,7 @@ export default function Citas() {
           {activeApts.length > 0 && (
             <div className="p-4 border-t border-outline-variant flex justify-between text-sm">
               <span className="text-on-surface-variant">Total: {activeApts.length} citas</span>
-              <span className="font-semibold text-primary">{formatCOP(activeApts.reduce((s, a) => s + a.price, 0))}</span>
+              <span className="font-semibold text-primary">{formatCOP(activeApts.reduce((s, a) => s + (a.price || 0), 0))}</span>
             </div>
           )}
         </div>
@@ -176,7 +179,7 @@ export default function Citas() {
                   {day.appointments.map((apt) => (
                     <div key={apt.id} className="flex items-center gap-3 p-2 bg-surface-container-low rounded-lg text-sm">
                       <span className="font-bold text-primary min-w-[50px]">{apt.time}</span>
-                      <span className="text-on-surface flex-1">{apt.patientName}</span>
+                      <span className="text-on-surface flex-1">{apt.patient_name}</span>
                       <span className="text-xs text-on-surface-variant/70">{typeLabel(apt.type)}</span>
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                         apt.status === 'confirmada' ? 'bg-green-100 text-green-700' :
@@ -212,7 +215,7 @@ export default function Citas() {
                     <p className="text-[10px] text-on-surface-variant/70">{formatDate(apt.date)}</p>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-on-surface">{apt.patientName}</p>
+                    <p className="text-sm font-medium text-on-surface">{apt.patient_name}</p>
                     <p className="text-xs text-on-surface-variant/70">{typeLabel(apt.type)} — {locationLabel(apt.location)}</p>
                   </div>
                   <button onClick={() => updateAppointment(apt.id, { status: 'confirmada' })} className="text-xs bg-green-500 text-white px-3 py-1.5 rounded-lg hover:bg-green-600 transition-colors font-medium">
@@ -238,7 +241,7 @@ export default function Citas() {
               const form = e.target;
               const patientId = form.patient_id.value;
               const patient = patients.find((p) => p.id === patientId);
-              await insertAppointment({
+              const r = await insertAppointment({
                 patient_id: patientId,
                 patient_name: patient?.full_name || '',
                 date: form.date.value,
@@ -249,6 +252,8 @@ export default function Citas() {
                 status: 'pendiente',
                 price: appointmentTypes.find((t) => t.value === form.type.value)?.price || 0,
               });
+              if (r.error) { toast.error(userFriendlyError(r.error)); return; }
+              toast.success('Cita creada');
               setShowNewForm(false);
             }}>
               <div>

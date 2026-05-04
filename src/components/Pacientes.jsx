@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { Search, Plus, X, Edit2, Phone, Mail, MapPin, ChevronRight, Filter } from 'lucide-react';
 import { patientStatuses, formatCOP, formatDate } from '../utils/format';
 import { usePatients } from '../hooks/useTenantData';
+import { useToast } from './Toast';
+import { userFriendlyError } from '../lib/logger';
 
 export default function Pacientes() {
   const { patients, loading, insertPatient, updatePatient, removePatient } = usePatients();
+  const toast = useToast();
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCity, setFilterCity] = useState('all');
@@ -200,16 +203,28 @@ export default function Pacientes() {
                 >
                   <Edit2 size={14} /> Editar
                 </button>
-                <button className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors">
+                <a
+                  href={selectedPatient.phone ? `https://wa.me/${String(selectedPatient.phone).replace(/\D/g, '')}` : '#'}
+                  target={selectedPatient.phone ? '_blank' : undefined}
+                  rel="noopener noreferrer"
+                  onClick={(e) => { if (!selectedPatient.phone) { e.preventDefault(); alert('Este paciente no tiene teléfono registrado.'); } }}
+                  className={`flex-1 ${selectedPatient.phone ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-300 cursor-not-allowed'} text-white py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors`}
+                >
                   <Phone size={14} /> WhatsApp
-                </button>
+                </a>
               </div>
               {confirmDelete ? (
                 <div className="bg-red-50 rounded-lg p-3 text-center">
                   <p className="text-sm text-danger font-medium mb-2">¿Eliminar este paciente?</p>
                   <div className="flex gap-2">
                     <button
-                      onClick={async () => { await removePatient(selectedPatient.id); setSelectedPatient(null); setConfirmDelete(false); }}
+                      onClick={async () => {
+                        const r = await removePatient(selectedPatient.id);
+                        if (r.error) { toast.error(userFriendlyError(r.error)); return; }
+                        toast.success('Paciente eliminado');
+                        setSelectedPatient(null);
+                        setConfirmDelete(false);
+                      }}
                       className="flex-1 bg-danger text-white py-2 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors"
                     >Sí, eliminar</button>
                     <button
@@ -240,7 +255,7 @@ export default function Pacientes() {
             <form className="space-y-4" onSubmit={async (e) => {
               e.preventDefault();
               const form = e.target;
-              await insertPatient({
+              const result = await insertPatient({
                 full_name: form.full_name.value,
                 phone: form.phone.value || null,
                 email: form.email.value || null,
@@ -250,6 +265,11 @@ export default function Pacientes() {
                 treatment: form.treatment.value || null,
                 notes: form.notes.value || null,
               });
+              if (result.error) {
+                toast.error(userFriendlyError(result.error));
+                return;
+              }
+              toast.success('Paciente creado');
               setShowNewForm(false);
             }}>
               <div className="grid grid-cols-2 gap-3">
@@ -309,7 +329,7 @@ export default function Pacientes() {
             <form className="space-y-4" onSubmit={async (e) => {
               e.preventDefault();
               const form = e.target;
-              await updatePatient(selectedPatient.id, {
+              const r = await updatePatient(selectedPatient.id, {
                 full_name: form.full_name.value,
                 phone: form.phone.value || null,
                 email: form.email.value || null,
@@ -319,6 +339,8 @@ export default function Pacientes() {
                 treatment: form.treatment.value || null,
                 notes: form.notes.value || null,
               });
+              if (r.error) { toast.error(userFriendlyError(r.error)); return; }
+              toast.success('Paciente actualizado');
               setShowEditForm(false);
               setSelectedPatient(null);
             }}>
