@@ -29,6 +29,9 @@ import LegalPage from './components/landing/LegalPage';
 // Patient panel
 import PatientApp from './components/patient/PatientApp';
 
+// PWA UX
+import { InstallPrompt, OfflineIndicator, UpdatePrompt } from './components/PWAComponents';
+
 function CRMApp() {
   const [activeModule, setActiveModule] = useState('dashboard');
   const { alerts } = useAlerts();
@@ -199,7 +202,10 @@ function App() {
   return (
     <AuthProvider>
       <ToastProvider>
+        <OfflineIndicator />
         <AppRouter />
+        <UpdatePrompt />
+        <InstallPrompt />
       </ToastProvider>
     </AuthProvider>
   );
