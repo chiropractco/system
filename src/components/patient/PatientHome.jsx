@@ -1,5 +1,14 @@
-import { Calendar, CreditCard, ExternalLink, FileText, LogOut, MapPin, Receipt, Stethoscope, User } from 'lucide-react';
+import { useState } from 'react';
+import {
+  Calendar, ChevronRight, CreditCard, ExternalLink, FileText,
+  LogOut, MapPin, Receipt, Stethoscope, User,
+} from 'lucide-react';
 import { usePatientAuth } from '../../contexts/PatientAuthContext';
+import { useToast } from '../Toast';
+import {
+  AppointmentDetailModal, CancelAppointmentModal,
+  RescheduleModal, SaleDetailModal,
+} from './PatientModals';
 
 const CLINIC_NAME = import.meta.env.VITE_CLINIC_NAME || 'chiropract.co';
 
@@ -38,7 +47,14 @@ function formatTime(t) {
 }
 
 export default function PatientHome() {
-  const { dashboard, signOut, loading, error, refresh } = usePatientAuth();
+  const { dashboard, session, signOut, loading, error, refresh } = usePatientAuth();
+  const toast = useToast();
+
+  // Modales
+  const [detailAppt, setDetailAppt] = useState(null); // appointment object
+  const [cancelAppt, setCancelAppt] = useState(null);
+  const [rescheduleAppt, setRescheduleAppt] = useState(null);
+  const [saleDetailId, setSaleDetailId] = useState(null);
 
   if (loading && !dashboard) {
     return (
@@ -68,6 +84,12 @@ export default function PatientHome() {
   const appointments = dashboard?.upcoming_appointments || [];
   const sales = dashboard?.recent_sales || [];
   const pending = dashboard?.pending_payments || [];
+
+  const onActionSuccess = (msg) => {
+    toast.success(msg);
+    refresh();
+  };
+  const onActionError = (msg) => toast.error(msg);
 
   return (
     <div className="min-h-screen bg-surface-container-low">
@@ -106,7 +128,7 @@ export default function PatientHome() {
           </div>
         </section>
 
-        {/* Pagos pendientes — destacado si hay */}
+        {/* Pagos pendientes */}
         {pending.length > 0 && (
           <section>
             <h2 className="text-sm font-bold text-on-surface uppercase tracking-wide mb-2 px-1 flex items-center gap-2">
@@ -155,18 +177,22 @@ export default function PatientHome() {
           ) : (
             <div className="space-y-2">
               {appointments.map((a) => (
-                <div
+                <button
                   key={a.id}
-                  className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 hover:border-primary/30 transition-colors"
+                  onClick={() => setDetailAppt(a)}
+                  className="w-full text-left bg-surface-container-lowest border border-outline-variant rounded-xl p-4 hover:border-primary/30 hover:shadow-sm transition-all group"
                 >
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="min-w-0">
                       <p className="text-sm font-bold text-on-surface capitalize">{formatDate(a.date)}</p>
                       <p className="text-2xl font-bold text-primary">{formatTime(a.time)}</p>
                     </div>
-                    <span className={`text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap ${STATUS_BADGE[a.status] || 'bg-slate-100 text-slate-700'}`}>
-                      {a.status}
-                    </span>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap ${STATUS_BADGE[a.status] || 'bg-slate-100 text-slate-700'}`}>
+                        {a.status}
+                      </span>
+                      <ChevronRight size={18} className="text-on-surface-variant group-hover:text-primary transition-colors" />
+                    </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-on-surface-variant">
                     <span className="flex items-center gap-1">
@@ -187,7 +213,7 @@ export default function PatientHome() {
                       <span className="ml-auto font-semibold text-on-surface">{formatCOP(a.price)}</span>
                     )}
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}
@@ -207,7 +233,11 @@ export default function PatientHome() {
           ) : (
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl divide-y divide-outline-variant overflow-hidden">
               {sales.map((s) => (
-                <div key={s.id} className="p-4 flex items-center justify-between gap-3">
+                <button
+                  key={s.id}
+                  onClick={() => setSaleDetailId(s.id)}
+                  className="w-full text-left p-4 flex items-center justify-between gap-3 hover:bg-surface-container-low transition-colors group"
+                >
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-on-surface">
                       {new Date(s.created_at).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -216,18 +246,61 @@ export default function PatientHome() {
                       {s.payment_method || 'Pago'} · {s.status}
                     </p>
                   </div>
-                  <p className="font-bold text-on-surface">{formatCOP(s.total)}</p>
-                </div>
+                  <div className="flex items-center gap-2">
+                    <p className="font-bold text-on-surface">{formatCOP(s.total)}</p>
+                    <ChevronRight size={16} className="text-on-surface-variant group-hover:text-primary transition-colors" />
+                  </div>
+                </button>
               ))}
             </div>
           )}
         </section>
 
-        {/* Footer */}
         <p className="text-center text-xs text-on-surface-variant pt-4 pb-2">
           ¿Necesitas algo? Escríbenos por WhatsApp.
         </p>
       </main>
+
+      {/* Modales */}
+      <AppointmentDetailModal
+        appointment={detailAppt}
+        open={!!detailAppt}
+        onClose={() => setDetailAppt(null)}
+        onCancel={() => {
+          setCancelAppt(detailAppt);
+          setDetailAppt(null);
+        }}
+        onReschedule={() => {
+          setRescheduleAppt(detailAppt);
+          setDetailAppt(null);
+        }}
+      />
+
+      <CancelAppointmentModal
+        token={session?.session_token}
+        appointment={cancelAppt}
+        open={!!cancelAppt}
+        onClose={() => setCancelAppt(null)}
+        onSuccess={onActionSuccess}
+        onError={onActionError}
+      />
+
+      <RescheduleModal
+        token={session?.session_token}
+        appointment={rescheduleAppt}
+        open={!!rescheduleAppt}
+        onClose={() => setRescheduleAppt(null)}
+        onSuccess={onActionSuccess}
+        onError={onActionError}
+      />
+
+      <SaleDetailModal
+        token={session?.session_token}
+        saleId={saleDetailId}
+        open={!!saleDetailId}
+        onClose={() => setSaleDetailId(null)}
+        onError={onActionError}
+      />
     </div>
   );
 }

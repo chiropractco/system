@@ -1,10 +1,10 @@
 // Edge Function: GET /functions/v1/patient-me
-//                 POST /functions/v1/patient-me  (logout)
+//                 POST /functions/v1/patient-me  (acciones)
 //
 // GET — Devuelve dashboard del paciente autenticado.
 // Header: Authorization: Bearer <session_token>
 //
-// Response:
+// Response GET:
 //   {
 //     "patient": { id, full_name, email, phone, ... },
 //     "upcoming_appointments": [...],
@@ -12,7 +12,10 @@
 //     "pending_payments": [...]
 //   }
 //
-// POST con body { "action": "logout" } → revoca la sesión
+// POST con body { "action": "logout" }
+// POST con body { "action": "cancel_appointment", "appointment_id": uuid, "reason"?: string }
+// POST con body { "action": "request_reschedule", "appointment_id": uuid, "preferred_date": "YYYY-MM-DD", "preferred_time": "HH:MM", "notes"?: string }
+// POST con body { "action": "get_sale", "sale_id": uuid }
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.43.0';
 
@@ -52,10 +55,58 @@ Deno.serve(async (req) => {
   try {
     if (req.method === 'POST') {
       const body = await req.json().catch(() => ({}));
-      if (body?.action === 'logout') {
+      const action = body?.action;
+
+      if (action === 'logout') {
         await supabase.rpc('patient_session_revoke', { p_token: token });
         return jsonResponse({ ok: true });
       }
+
+      if (action === 'cancel_appointment') {
+        if (!body?.appointment_id) return jsonResponse({ error: 'Falta appointment_id' }, 400);
+        const { data, error } = await supabase.rpc('patient_cancel_appointment', {
+          p_token: token,
+          p_appointment_id: body.appointment_id,
+          p_reason: body.reason || null,
+        });
+        if (error) {
+          console.error('patient_cancel_appointment', error);
+          return jsonResponse({ error: error.message }, 400);
+        }
+        return jsonResponse(data);
+      }
+
+      if (action === 'request_reschedule') {
+        if (!body?.appointment_id || !body?.preferred_date || !body?.preferred_time) {
+          return jsonResponse({ error: 'Faltan datos' }, 400);
+        }
+        const { data, error } = await supabase.rpc('patient_request_reschedule', {
+          p_token: token,
+          p_appointment_id: body.appointment_id,
+          p_preferred_date: body.preferred_date,
+          p_preferred_time: body.preferred_time,
+          p_notes: body.notes || null,
+        });
+        if (error) {
+          console.error('patient_request_reschedule', error);
+          return jsonResponse({ error: error.message }, 400);
+        }
+        return jsonResponse(data);
+      }
+
+      if (action === 'get_sale') {
+        if (!body?.sale_id) return jsonResponse({ error: 'Falta sale_id' }, 400);
+        const { data, error } = await supabase.rpc('patient_get_sale', {
+          p_token: token,
+          p_sale_id: body.sale_id,
+        });
+        if (error) {
+          console.error('patient_get_sale', error);
+          return jsonResponse({ error: error.message }, 400);
+        }
+        return jsonResponse(data);
+      }
+
       return jsonResponse({ error: 'Acción desconocida' }, 400);
     }
 

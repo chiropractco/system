@@ -103,3 +103,34 @@ export async function logout(token) {
     clearSession();
   }
 }
+
+// ============== Acciones del paciente (Sprint 1.2) ==============
+export async function cancelAppointment(token, appointmentId, reason) {
+  return fnFetch('/patient-me', {
+    method: 'POST',
+    body: { action: 'cancel_appointment', appointment_id: appointmentId, reason },
+    token,
+  });
+}
+
+export async function requestReschedule(token, appointmentId, preferredDate, preferredTime, notes) {
+  return fnFetch('/patient-me', {
+    method: 'POST',
+    body: {
+      action: 'request_reschedule',
+      appointment_id: appointmentId,
+      preferred_date: preferredDate,
+      preferred_time: preferredTime,
+      notes,
+    },
+    token,
+  });
+}
+
+export async function getSaleDetail(token, saleId) {
+  return fnFetch('/patient-me', {
+    method: 'POST',
+    body: { action: 'get_sale', sale_id: saleId },
+    token,
+  });
+}
