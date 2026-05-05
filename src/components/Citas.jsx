@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, Clock, MapPin, ChevronLeft, ChevronRight, AlertCircle, CheckCircle, XCircle, Download } from 'lucide-react';
+import { Plus, X, Clock, MapPin, ChevronLeft, ChevronRight, AlertCircle, CheckCircle, XCircle, Download, Stethoscope } from 'lucide-react';
 import { appointmentTypes, formatCOP, formatDate } from '../utils/format';
 import { useAppointments, usePatients } from '../hooks/useTenantData';
 import { useToast } from './Toast';
@@ -7,15 +7,17 @@ import { userFriendlyError } from '../lib/logger';
 import LoadingState from './LoadingState';
 import PaymentLinkButton from './PaymentLinkButton';
 import { downloadCsv } from '../utils/csv';
+import SoapEditorModal from './clinical/SoapEditorModal';
 
 export default function Citas() {
   const { appointments, loading, insertAppointment, updateAppointment } = useAppointments();
   const { patients } = usePatients();
   const toast = useToast();
-
-  if (loading && appointments.length === 0) return <LoadingState message="Cargando citas..." />;
   const [view, setView] = useState('today');
   const [showNewForm, setShowNewForm] = useState(false);
+  const [soapForApt, setSoapForApt] = useState(null); // appointment object para abrir SOAP
+
+  if (loading && appointments.length === 0) return <LoadingState message="Cargando citas..." />;
   const todayStr = new Date().toISOString().split('T')[0];
 
   const todayApts = appointments.filter((a) => a.date === todayStr);
@@ -164,7 +166,7 @@ export default function Citas() {
                       {apt.status}
                     </span>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 flex-wrap">
                     {apt.status === 'pendiente' && (
                       <button onClick={() => updateAppointment(apt.id, { status: 'confirmada' })} className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded hover:bg-green-100 transition-colors">Confirmar</button>
                     )}
@@ -174,6 +176,13 @@ export default function Citas() {
                     {apt.status !== 'cancelada' && apt.status !== 'completada' && (
                       <button onClick={() => updateAppointment(apt.id, { status: 'cancelada' })} className="text-xs bg-red-50 text-red-600 px-2 py-1 rounded hover:bg-red-100 transition-colors">Cancelar</button>
                     )}
+                    <button
+                      onClick={() => setSoapForApt(apt)}
+                      className="text-xs bg-primary/10 text-primary px-2 py-1 rounded hover:bg-primary/20 transition-colors flex items-center gap-1"
+                      title="Crear/editar nota SOAP"
+                    >
+                      <Stethoscope size={11} /> SOAP
+                    </button>
                   </div>
                 </div>
               ))
@@ -338,6 +347,17 @@ export default function Citas() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* SOAP Editor Modal */}
+      {soapForApt && (
+        <SoapEditorModal
+          patient={{ id: soapForApt.patient_id, full_name: soapForApt.patient_name, name: soapForApt.patient_name }}
+          appointment={soapForApt}
+          open={!!soapForApt}
+          onClose={() => setSoapForApt(null)}
+          onSaved={() => setSoapForApt(null)}
+        />
       )}
     </div>
   );

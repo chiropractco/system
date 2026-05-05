@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Search, Plus, X, Edit2, Phone, Mail, MapPin, ChevronRight, Filter, Download } from 'lucide-react';
+import { Search, Plus, X, Edit2, Phone, Mail, MapPin, ChevronRight, Filter, Download, Stethoscope, User as UserIcon } from 'lucide-react';
 import { patientStatuses, formatCOP, formatDate } from '../utils/format';
 import { usePatients } from '../hooks/useTenantData';
 import { useToast } from './Toast';
 import { userFriendlyError } from '../lib/logger';
 import { downloadCsv } from '../utils/csv';
+import ClinicalHistoryPanel from './clinical/ClinicalHistoryPanel';
 
 export default function Pacientes() {
   const { patients, loading, insertPatient, updatePatient, removePatient } = usePatients();
@@ -16,6 +17,7 @@ export default function Pacientes() {
   const [showNewForm, setShowNewForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [detailTab, setDetailTab] = useState('data'); // 'data' | 'clinical'
 
   const patientList = patients.map((p) => ({
     ...p,
@@ -210,12 +212,41 @@ export default function Pacientes() {
 
       {/* Patient Detail Modal */}
       {selectedPatient && !showEditForm && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setSelectedPatient(null)}>
-          <div className="bg-surface-container-lowest rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-on-surface">{selectedPatient.name}</h3>
-              <button onClick={() => setSelectedPatient(null)} className="text-on-surface-variant/50 hover:text-on-surface-variant"><X size={20} /></button>
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => { setSelectedPatient(null); setDetailTab('data'); }}>
+          <div className="bg-surface-container-lowest sm:rounded-2xl rounded-t-2xl max-w-2xl w-full max-h-[92vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 pt-6 pb-3 flex items-center justify-between flex-shrink-0">
+              <h3 className="text-lg font-bold text-on-surface truncate">{selectedPatient.name}</h3>
+              <button onClick={() => { setSelectedPatient(null); setDetailTab('data'); }} className="text-on-surface-variant/50 hover:text-on-surface-variant"><X size={20} /></button>
             </div>
+
+            {/* Tabs */}
+            <div className="flex border-b border-outline-variant px-6 flex-shrink-0">
+              <button
+                onClick={() => setDetailTab('data')}
+                className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                  detailTab === 'data'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-on-surface-variant hover:text-on-surface'
+                }`}
+              >
+                <UserIcon size={14} /> Datos
+              </button>
+              <button
+                onClick={() => setDetailTab('clinical')}
+                className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                  detailTab === 'clinical'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-on-surface-variant hover:text-on-surface'
+                }`}
+              >
+                <Stethoscope size={14} /> Historial clínico
+              </button>
+            </div>
+
+            <div className="overflow-y-auto px-6 py-4 flex-1">
+            {detailTab === 'clinical' ? (
+              <ClinicalHistoryPanel patient={{ id: selectedPatient.id, full_name: selectedPatient.name, name: selectedPatient.name }} />
+            ) : (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 {statusBadge(selectedPatient.status)}
@@ -291,6 +322,8 @@ export default function Pacientes() {
                   className="w-full text-danger/70 hover:text-danger text-sm py-2 transition-colors"
                 >Eliminar paciente</button>
               )}
+            </div>
+            )}
             </div>
           </div>
         </div>
