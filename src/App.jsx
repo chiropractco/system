@@ -25,6 +25,7 @@ import TestimonialsSection from './components/landing/TestimonialsSection';
 import ContactSection from './components/landing/ContactSection';
 import WhatsAppFAB from './components/landing/WhatsAppFAB';
 import LegalPage from './components/landing/LegalPage';
+import PricingSection from './components/landing/PricingSection';
 
 // Patient panel
 import PatientApp from './components/patient/PatientApp';
@@ -32,10 +33,15 @@ import PatientApp from './components/patient/PatientApp';
 // PWA UX
 import { InstallPrompt, OfflineIndicator, UpdatePrompt } from './components/PWAComponents';
 
+// SaaS Plan
+import TrialBanner from './components/billing/TrialBanner';
+
 function CRMApp() {
   const [activeModule, setActiveModule] = useState('dashboard');
   const { alerts } = useAlerts();
   const { signOut } = useAuth();
+
+  const goToPlan = useCallback(() => setActiveModule('settings'), []);
 
   const handleIdleLogout = useCallback(() => {
     signOut().catch(() => {});
@@ -61,6 +67,7 @@ function CRMApp() {
     <div className="flex min-h-screen bg-surface-container-low">
       <Sidebar activeModule={activeModule} onNavigate={setActiveModule} alerts={alerts} />
       <main className="flex-1 lg:ml-0 overflow-auto">
+        <TrialBanner onUpgradeClick={goToPlan} />
         <div className="p-6 lg:p-8 max-w-6xl mx-auto">
           {renderModule()}
         </div>
@@ -100,6 +107,7 @@ function LandingApp() {
         <AboutSection />
         <JornadasSection />
         <TestimonialsSection />
+        <PricingSection />
         <ContactSection />
       </div>
       <WhatsAppFAB />

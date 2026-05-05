@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { wa } from '../lib/clinic';
 import TeamTab from './TeamTab';
 import BillingSettings from './billing/BillingSettings';
+import PlanTab from './billing/PlanTab';
 
 export default function Settings() {
   const { tenant, profile, updateProfile, updateTenant } = useAuth();
@@ -205,84 +206,8 @@ export default function Settings() {
         </div>
       )}
 
-      {/* Plan Tab */}
-      {activeTab === 'plan' && (
-        <div className="space-y-4">
-          <div className="bg-surface-container-lowest rounded-xl shadow-clinical border border-outline-variant p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-primary/10 p-3 rounded-lg">
-                <CreditCard size={24} className="text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-on-surface">Plan Actual</h3>
-                <p className="text-xs text-on-surface-variant">Estado de tu suscripción</p>
-              </div>
-            </div>
-            <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-lg font-bold text-primary capitalize">{tenant?.plan || 'Trial'}</p>
-                  <p className="text-sm text-on-surface-variant capitalize">
-                    Estado: {tenant?.plan_status || 'activo'}
-                  </p>
-                  {tenant?.trial_ends_at && tenant?.plan === 'trial' && (
-                    <p className="text-xs text-on-surface-variant flex items-center gap-1 mt-1">
-                      <Clock size={12} /> Trial finaliza: {new Date(tenant.trial_ends_at).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })}
-                    </p>
-                  )}
-                </div>
-                <Shield size={32} className="text-primary/30" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-            <Clock size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-amber-900">Cambio de plan próximamente</p>
-              <p className="text-xs text-amber-800 mt-1">
-                La gestión automática de planes (con cobro online) estará disponible en breve. Mientras tanto, contáctanos por WhatsApp para cambiar tu plan.
-              </p>
-              <a
-                href={wa.specialist()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 mt-3 bg-[#25D366] hover:bg-[#20bd5a] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-              >
-                <MessageCircle size={14} /> Contactar por WhatsApp
-              </a>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {[
-              { id: 'basic', name: 'Básico', price: 'Gratis', features: ['1 consultorio', '50 pacientes', 'Dashboard básico'] },
-              { id: 'pro', name: 'Profesional', price: '$49.900/mes', features: ['Consultorios ilimitados', 'Pacientes ilimitados', 'Reportes avanzados', 'Productos y servicios'] },
-              { id: 'enterprise', name: 'Premium', price: '$99.900/mes', features: ['Todo Profesional', 'Jornadas ilimitadas', 'API access', 'Soporte prioritario'] },
-            ].map((plan) => {
-              const current = tenant?.plan === plan.id;
-              return (
-                <div key={plan.id} className={`bg-surface-container-lowest rounded-xl shadow-clinical border p-5 ${current ? 'border-primary ring-2 ring-primary/20' : 'border-outline-variant'}`}>
-                  <h4 className="font-bold text-on-surface">{plan.name}</h4>
-                  <p className="text-xl font-bold text-primary mt-1">{plan.price}</p>
-                  <ul className="mt-3 space-y-1">
-                    {plan.features.map((f) => (
-                      <li key={f} className="text-xs text-on-surface-variant flex items-center gap-1">
-                        <CheckCircle size={12} className="text-success" /> {f}
-                      </li>
-                    ))}
-                  </ul>
-                  {current && (
-                    <p className="w-full mt-4 py-2 text-center text-sm font-medium bg-primary/10 text-primary rounded-lg">
-                      Plan actual
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {/* Plan Tab — gestión completa de suscripción SaaS */}
+      {activeTab === 'plan' && <PlanTab />}
     </div>
   );
 }

@@ -97,7 +97,31 @@ export function usePatients() {
   const { data, loading, error, insert, update, remove, refetch } = useTenantData('patients', {
     order: { column: 'created_at', ascending: false },
   });
-  return { patients: data, loading, error, insertPatient: insert, updatePatient: update, removePatient: remove, refetchPatients: refetch };
+
+  // Wrapper insertPatient con check de plan limit
+  const insertPatient = async (record) => {
+    try {
+      const { data: limit } = await supabase.rpc('tenant_check_plan_limit', {
+        p_tenant_id: record.tenant_id || (await supabase.from('tenants').select('id').limit(1).maybeSingle()).data?.id,
+        p_resource: 'patients',
+      });
+      if (limit && !limit.can_add) {
+        return {
+          error: {
+            message: limit.reason === 'subscription_inactive'
+              ? 'Tu suscripción no está activa. Renuévala desde Settings → Plan.'
+              : `Tu plan ${limit.plan_id} permite ${limit.max} pacientes. Tienes ${limit.current}. Actualiza el plan en Settings → Plan.`,
+            code: 'PLAN_LIMIT',
+          },
+        };
+      }
+    } catch {
+      // Si el RPC falla (network), permitir el insert — la BD también validará
+    }
+    return insert(record);
+  };
+
+  return { patients: data, loading, error, insertPatient, updatePatient: update, removePatient: remove, refetchPatients: refetch };
 }
 
 export function useAppointments() {
