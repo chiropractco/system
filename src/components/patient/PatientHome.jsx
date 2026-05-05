@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   Calendar, ChevronRight, CreditCard, Edit3, ExternalLink, FileText,
-  LogOut, MapPin, Receipt, Sparkles, Stethoscope, User, Users,
+  Home, LogOut, MapPin, Receipt, Sparkles, Stethoscope, User, Users,
 } from 'lucide-react';
 import { usePatientAuth } from '../../contexts/PatientAuthContext';
 import { useToast } from '../Toast';
@@ -10,6 +10,7 @@ import {
   AppointmentDetailModal, BookJornadaModal, CancelAppointmentModal,
   EditProfileModal, RescheduleModal, SaleDetailModal,
 } from './PatientModals';
+import PatientClinicalHistory from './PatientClinicalHistory';
 
 const CLINIC_NAME = import.meta.env.VITE_CLINIC_NAME || 'chiropract.co';
 
@@ -50,6 +51,9 @@ function formatTime(t) {
 export default function PatientHome() {
   const { dashboard, session, signOut, loading, error, refresh } = usePatientAuth();
   const toast = useToast();
+
+  // Tab activo
+  const [tab, setTab] = useState('home'); // 'home' | 'clinical'
 
   // Modales
   const [detailAppt, setDetailAppt] = useState(null); // appointment object
@@ -134,7 +138,37 @@ export default function PatientHome() {
         </div>
       </header>
 
+      {/* Tabs (sticky bajo el header) */}
+      <div className="bg-surface-container-lowest border-b border-outline-variant sticky top-[57px] z-20">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 flex gap-1">
+          <button
+            onClick={() => setTab('home')}
+            className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              tab === 'home'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            <Home size={14} /> Inicio
+          </button>
+          <button
+            onClick={() => setTab('clinical')}
+            className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              tab === 'clinical'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            <Stethoscope size={14} /> Mi historial
+          </button>
+        </div>
+      </div>
+
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        {tab === 'clinical' ? (
+          <PatientClinicalHistory />
+        ) : (
+        <>
         {/* Saludo */}
         <section className="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant">
           <div className="flex items-center gap-3">
@@ -343,6 +377,8 @@ export default function PatientHome() {
         <p className="text-center text-xs text-on-surface-variant pt-4 pb-2">
           ¿Necesitas algo? Escríbenos por WhatsApp.
         </p>
+        </>
+        )}
       </main>
 
       {/* Modales */}

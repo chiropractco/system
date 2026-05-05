@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Search, Plus, X, Edit2, Phone, Mail, MapPin, ChevronRight, Filter, Download, Stethoscope, User as UserIcon } from 'lucide-react';
+import { Search, Plus, X, Edit2, Phone, Mail, MapPin, ChevronRight, Filter, Download, Stethoscope, User as UserIcon, Folder } from 'lucide-react';
 import { patientStatuses, formatCOP, formatDate } from '../utils/format';
 import { usePatients } from '../hooks/useTenantData';
 import { useToast } from './Toast';
 import { userFriendlyError } from '../lib/logger';
 import { downloadCsv } from '../utils/csv';
 import ClinicalHistoryPanel from './clinical/ClinicalHistoryPanel';
+import ClinicalFilesPanel from './clinical/ClinicalFilesPanel';
 
 export default function Pacientes() {
   const { patients, loading, insertPatient, updatePatient, removePatient } = usePatients();
@@ -241,11 +242,23 @@ export default function Pacientes() {
               >
                 <Stethoscope size={14} /> Historial clínico
               </button>
+              <button
+                onClick={() => setDetailTab('files')}
+                className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                  detailTab === 'files'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-on-surface-variant hover:text-on-surface'
+                }`}
+              >
+                <Folder size={14} /> Archivos
+              </button>
             </div>
 
             <div className="overflow-y-auto px-6 py-4 flex-1">
             {detailTab === 'clinical' ? (
               <ClinicalHistoryPanel patient={{ id: selectedPatient.id, full_name: selectedPatient.name, name: selectedPatient.name }} />
+            ) : detailTab === 'files' ? (
+              <ClinicalFilesPanel patient={{ id: selectedPatient.id, full_name: selectedPatient.name, name: selectedPatient.name }} />
             ) : (
             <div className="space-y-4">
               <div className="flex items-center gap-2">

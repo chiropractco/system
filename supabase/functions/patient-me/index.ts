@@ -147,6 +147,38 @@ Deno.serve(async (req) => {
         return jsonResponse(data);
       }
 
+      if (action === 'get_clinical_history') {
+        const { data, error } = await supabase.rpc('patient_get_clinical_history', {
+          p_token: token,
+        });
+        if (error) {
+          console.error('patient_get_clinical_history', error);
+          return jsonResponse({ error: error.message }, 401);
+        }
+        return jsonResponse(data);
+      }
+
+      if (action === 'get_file_url') {
+        if (!body?.file_id) return jsonResponse({ error: 'Falta file_id' }, 400);
+        const { data: storagePath, error } = await supabase.rpc('patient_get_file_storage_path', {
+          p_token: token,
+          p_file_id: body.file_id,
+        });
+        if (error || !storagePath) {
+          console.error('patient_get_file_storage_path', error);
+          return jsonResponse({ error: error?.message || 'Archivo no encontrado' }, 404);
+        }
+        // Generar signed URL con service role (1 hora)
+        const { data: signed, error: signErr } = await supabase.storage
+          .from('clinical-files')
+          .createSignedUrl(storagePath, 3600);
+        if (signErr || !signed?.signedUrl) {
+          console.error('createSignedUrl', signErr);
+          return jsonResponse({ error: 'No se pudo generar URL' }, 500);
+        }
+        return jsonResponse({ url: signed.signedUrl, expires_in: 3600 });
+      }
+
       return jsonResponse({ error: 'Acción desconocida' }, 400);
     }
 

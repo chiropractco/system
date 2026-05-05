@@ -159,3 +159,20 @@ export async function bookJornada(token, jornadaId, notes) {
     token,
   });
 }
+
+// ============== FASE 2.3 — historia clínica del paciente ==============
+export async function getClinicalHistory(token) {
+  return fnFetch('/patient-me', {
+    method: 'POST',
+    body: { action: 'get_clinical_history' },
+    token,
+  });
+}
+
+export async function getFileUrl(token, fileId) {
+  return fnFetch('/patient-me', {
+    method: 'POST',
+    body: { action: 'get_file_url', file_id: fileId },
+    token,
+  });
+}
