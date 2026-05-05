@@ -4,10 +4,14 @@ import { formatCOP, formatDate } from '../utils/format';
 import { useJornadas } from '../hooks/useTenantData';
 import { useToast } from './Toast';
 import { userFriendlyError } from '../lib/logger';
+import LoadingState from './LoadingState';
 
 export default function Jornadas() {
-  const { jornadas, loading, insertJornada, updateJornada } = useJornadas();
+  const { jornadas, loading, insertJornada, updateJornada, removeJornada } = useJornadas();
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const toast = useToast();
+
+  if (loading && jornadas.length === 0) return <LoadingState message="Cargando jornadas..." />;
   const [showNewForm, setShowNewForm] = useState(false);
   const [selectedJornada, setSelectedJornada] = useState(null);
   const [tab, setTab] = useState('proximas');
@@ -179,6 +183,21 @@ export default function Jornadas() {
                     <button onClick={() => { updateJornada(selectedJornada.id, { status: 'cancelada' }); setSelectedJornada(null); }} className="flex-1 bg-danger hover:bg-red-600 text-white py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors">
                       <XCircle size={14} /> Cancelar
                     </button>
+                  </>
+                )}
+                {!confirmDelete ? (
+                  <button onClick={() => setConfirmDelete(true)} className="px-3 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-low rounded-lg text-sm">
+                    Eliminar
+                  </button>
+                ) : (
+                  <>
+                    <button onClick={async () => {
+                      const r = await removeJornada(selectedJornada.id);
+                      if (r.error) { toast.error(userFriendlyError(r.error)); return; }
+                      toast.success('Jornada eliminada');
+                      setSelectedJornada(null); setConfirmDelete(false);
+                    }} className="px-3 py-2 bg-danger text-white rounded-lg text-sm font-medium">Sí, eliminar</button>
+                    <button onClick={() => setConfirmDelete(false)} className="px-3 py-2 border border-outline-variant rounded-lg text-sm">Cancelar</button>
                   </>
                 )}
               </div>

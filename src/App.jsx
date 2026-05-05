@@ -35,8 +35,8 @@ function CRMApp() {
     signOut().catch(() => {});
   }, [signOut]);
 
-  // Cierra sesión tras 30 min sin actividad (SEC-020)
-  useIdleTimeout(handleIdleLogout, 30 * 60 * 1000);
+  // Cierra sesión tras 30 min sin actividad, con warning a los 28 min (SEC-020)
+  const { warningOpen, secondsLeft, dismiss } = useIdleTimeout(handleIdleLogout, 30 * 60 * 1000, 2 * 60 * 1000);
 
   const renderModule = () => {
     switch (activeModule) {
@@ -59,6 +59,26 @@ function CRMApp() {
           {renderModule()}
         </div>
       </main>
+      {warningOpen && (
+        <div className="fixed inset-0 bg-black/50 z-[10000] flex items-center justify-center p-4">
+          <div className="bg-surface-container-lowest rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+            <div className="w-14 h-14 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            </div>
+            <h3 className="text-lg font-bold text-on-surface mb-2">Su sesión va a expirar</h3>
+            <p className="text-sm text-on-surface-variant mb-1">Por inactividad cerraremos su sesión en:</p>
+            <p className="text-3xl font-bold text-primary mb-5">{Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')}</p>
+            <div className="flex gap-2">
+              <button onClick={() => signOut()} className="flex-1 px-4 py-2 border border-outline-variant text-on-surface-variant rounded-lg text-sm font-medium hover:bg-surface-container-low">
+                Cerrar sesión
+              </button>
+              <button onClick={dismiss} className="flex-1 px-4 py-2 bg-primary text-on-primary rounded-lg text-sm font-medium hover:bg-primary-light">
+                Sigo aquí
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

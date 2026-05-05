@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Search, Plus, X, Edit2, Phone, Mail, MapPin, ChevronRight, Filter } from 'lucide-react';
+import { Search, Plus, X, Edit2, Phone, Mail, MapPin, ChevronRight, Filter, Download } from 'lucide-react';
 import { patientStatuses, formatCOP, formatDate } from '../utils/format';
 import { usePatients } from '../hooks/useTenantData';
 import { useToast } from './Toast';
 import { userFriendlyError } from '../lib/logger';
+import { downloadCsv } from '../utils/csv';
 
 export default function Pacientes() {
   const { patients, loading, insertPatient, updatePatient, removePatient } = usePatients();
@@ -59,12 +60,35 @@ export default function Pacientes() {
           <h2 className="text-2xl font-bold text-on-surface">Pacientes</h2>
           <p className="text-on-surface-variant text-sm mt-1">{patientList.length} pacientes registrados</p>
         </div>
-        <button
-          onClick={() => setShowNewForm(true)}
-          className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
-        >
-          <Plus size={16} /> Nuevo Paciente
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => downloadCsv(
+              `pacientes-${new Date().toISOString().slice(0,10)}.csv`,
+              filtered,
+              [
+                { key: 'name', label: 'Nombre' },
+                { key: 'phone', label: 'Teléfono' },
+                { key: 'email', label: 'Email' },
+                { key: 'city', label: 'Ciudad' },
+                { key: 'status', label: 'Estado' },
+                { key: 'treatment', label: 'Tratamiento' },
+                { key: 'lastVisit', label: 'Última visita' },
+                { key: 'totalSpent', label: 'Total gastado', format: (v) => v ?? 0 },
+                { key: 'appointmentsCount', label: 'Total citas', format: (v) => v ?? 0 },
+              ]
+            )}
+            className="hidden sm:inline-flex items-center gap-2 px-3 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-low rounded-lg text-sm font-medium transition-colors"
+            title="Exportar a CSV (Excel)"
+          >
+            <Download size={16} /> Exportar
+          </button>
+          <button
+            onClick={() => setShowNewForm(true)}
+            className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+          >
+            <Plus size={16} /> Nuevo Paciente
+          </button>
+        </div>
       </div>
 
       {/* Search & Filters */}
@@ -108,48 +132,76 @@ export default function Pacientes() {
         </div>
       ) : (
       <div className="bg-surface-container-lowest rounded-xl shadow-clinical border border-outline-variant overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-surface-container-low border-b border-outline-variant">
-              <th className="text-left px-4 py-3 text-xs font-semibold text-on-surface-variant uppercase">Nombre</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-on-surface-variant uppercase">Teléfono</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-on-surface-variant uppercase">Ciudad</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-on-surface-variant uppercase">Estado</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-on-surface-variant uppercase">Última visita</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-on-surface-variant uppercase">Total</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((p) => (
-              <tr
-                key={p.id}
-                className="border-b border-outline-variant/30 hover:bg-surface-container-low/50 cursor-pointer transition-colors"
-                onClick={() => setSelectedPatient(p)}
-              >
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
-                      {(p.name || 'U').split(' ').map((n) => n[0] || '').join('').slice(0, 2)}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-on-surface">{p.name}</p>
-                      {p.vip && <span className="text-[10px] bg-accent/20 text-accent px-1.5 py-0.5 rounded font-bold">VIP</span>}
-                    </div>
+        {/* Mobile: cards */}
+        <div className="md:hidden divide-y divide-outline-variant">
+          {filtered.map((p) => (
+            <div key={p.id} className="p-4 hover:bg-surface-container-low/50 cursor-pointer" onClick={() => setSelectedPatient(p)}>
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-bold flex-shrink-0">
+                  {(p.name || 'U').split(' ').map((n) => n[0] || '').join('').slice(0, 2)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-semibold text-on-surface truncate">{p.name}</p>
+                    {p.vip && <span className="text-[10px] bg-accent/20 text-accent px-1.5 py-0.5 rounded font-bold">VIP</span>}
                   </div>
-                </td>
-                <td className="px-4 py-3 text-sm text-on-surface-variant">{p.phone}</td>
-                <td className="px-4 py-3 text-sm text-on-surface-variant">{p.city}</td>
-                <td className="px-4 py-3">{statusBadge(p.status)}</td>
-                <td className="px-4 py-3 text-sm text-on-surface-variant">{formatShortDateLocal(p.lastVisit)}</td>
-                <td className="px-4 py-3 text-sm font-medium text-on-surface text-right">{formatCOP(p.totalSpent)}</td>
-                <td className="px-4 py-3">
-                  <ChevronRight size={16} className="text-on-surface-variant/50" />
-                </td>
+                  <p className="text-xs text-on-surface-variant truncate">{p.phone || '—'} · {p.city || '—'}</p>
+                  <div className="flex items-center justify-between mt-2 gap-2">
+                    {statusBadge(p.status)}
+                    <span className="text-xs font-medium text-on-surface">{formatCOP(p.totalSpent || 0)}</span>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-on-surface-variant/50 flex-shrink-0 mt-2" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop: tabla */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full min-w-[700px]">
+            <thead>
+              <tr className="bg-surface-container-low border-b border-outline-variant">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-on-surface-variant uppercase">Nombre</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-on-surface-variant uppercase">Teléfono</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-on-surface-variant uppercase">Ciudad</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-on-surface-variant uppercase">Estado</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-on-surface-variant uppercase">Última visita</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-on-surface-variant uppercase">Total</th>
+                <th className="px-4 py-3"></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.map((p) => (
+                <tr
+                  key={p.id}
+                  className="border-b border-outline-variant/30 hover:bg-surface-container-low/50 cursor-pointer transition-colors"
+                  onClick={() => setSelectedPatient(p)}
+                >
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
+                        {(p.name || 'U').split(' ').map((n) => n[0] || '').join('').slice(0, 2)}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-on-surface">{p.name}</p>
+                        {p.vip && <span className="text-[10px] bg-accent/20 text-accent px-1.5 py-0.5 rounded font-bold">VIP</span>}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-on-surface-variant">{p.phone}</td>
+                  <td className="px-4 py-3 text-sm text-on-surface-variant">{p.city}</td>
+                  <td className="px-4 py-3">{statusBadge(p.status)}</td>
+                  <td className="px-4 py-3 text-sm text-on-surface-variant">{formatShortDateLocal(p.lastVisit)}</td>
+                  <td className="px-4 py-3 text-sm font-medium text-on-surface text-right">{formatCOP(p.totalSpent)}</td>
+                  <td className="px-4 py-3">
+                    <ChevronRight size={16} className="text-on-surface-variant/50" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         {filtered.length === 0 && (
           <div className="py-12 text-center text-on-surface-variant/70 text-sm">No se encontraron pacientes</div>
         )}

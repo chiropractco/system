@@ -1,14 +1,19 @@
 import { useState } from 'react';
-import { Plus, X, Clock, MapPin, ChevronLeft, ChevronRight, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, X, Clock, MapPin, ChevronLeft, ChevronRight, AlertCircle, CheckCircle, XCircle, Download } from 'lucide-react';
 import { appointmentTypes, formatCOP, formatDate } from '../utils/format';
 import { useAppointments, usePatients } from '../hooks/useTenantData';
 import { useToast } from './Toast';
 import { userFriendlyError } from '../lib/logger';
+import LoadingState from './LoadingState';
+import PaymentLinkButton from './PaymentLinkButton';
+import { downloadCsv } from '../utils/csv';
 
 export default function Citas() {
   const { appointments, loading, insertAppointment, updateAppointment } = useAppointments();
   const { patients } = usePatients();
   const toast = useToast();
+
+  if (loading && appointments.length === 0) return <LoadingState message="Cargando citas..." />;
   const [view, setView] = useState('today');
   const [showNewForm, setShowNewForm] = useState(false);
   const todayStr = new Date().toISOString().split('T')[0];
@@ -56,12 +61,32 @@ export default function Citas() {
           <h2 className="text-2xl font-bold text-on-surface">Citas</h2>
           <p className="text-on-surface-variant text-sm mt-1">Gestión de agendamiento</p>
         </div>
-        <button
-          onClick={() => setShowNewForm(true)}
-          className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
-        >
-          <Plus size={16} /> Agendar Cita
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => downloadCsv(
+              `citas-${new Date().toISOString().slice(0,10)}.csv`,
+              appointments,
+              [
+                { key: 'date', label: 'Fecha' },
+                { key: 'time', label: 'Hora' },
+                { key: 'patient_name', label: 'Paciente' },
+                { key: 'type', label: 'Tipo' },
+                { key: 'location', label: 'Ubicación' },
+                { key: 'status', label: 'Estado' },
+                { key: 'price', label: 'Precio', format: (v) => v ?? 0 },
+              ]
+            )}
+            className="hidden sm:inline-flex items-center gap-2 px-3 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-low rounded-lg text-sm font-medium transition-colors"
+          >
+            <Download size={16} /> Exportar
+          </button>
+          <button
+            onClick={() => setShowNewForm(true)}
+            className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+          >
+            <Plus size={16} /> Agendar Cita
+          </button>
+        </div>
       </div>
 
       {/* View Tabs */}
@@ -218,9 +243,21 @@ export default function Citas() {
                     <p className="text-sm font-medium text-on-surface">{apt.patient_name}</p>
                     <p className="text-xs text-on-surface-variant/70">{typeLabel(apt.type)} — {locationLabel(apt.location)}</p>
                   </div>
-                  <button onClick={() => updateAppointment(apt.id, { status: 'confirmada' })} className="text-xs bg-green-500 text-white px-3 py-1.5 rounded-lg hover:bg-green-600 transition-colors font-medium">
-                    Confirmar
-                  </button>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <PaymentLinkButton
+                      amount={apt.price || 0}
+                      description={`${typeLabel(apt.type)} — ${apt.patient_name}`}
+                      patientId={apt.patient_id}
+                      appointmentId={apt.id}
+                      customerName={apt.patient_name}
+                      customerPhone={patients.find((p) => p.id === apt.patient_id)?.phone}
+                      label="Cobrar"
+                      className="!px-3 !py-1.5 !text-xs"
+                    />
+                    <button onClick={() => updateAppointment(apt.id, { status: 'confirmada' })} className="text-xs bg-green-500 text-white px-3 py-1.5 rounded-lg hover:bg-green-600 transition-colors font-medium">
+                      Confirmar
+                    </button>
+                  </div>
                 </div>
               ))
             )}

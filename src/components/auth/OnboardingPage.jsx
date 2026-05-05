@@ -19,6 +19,7 @@ export default function OnboardingPage() {
   const [plan, setPlan] = useState('trial');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [slugTouched, setSlugTouched] = useState(false);
   const slugDebounceRef = useRef(null);
 
   const handleCreate = async () => {
@@ -54,10 +55,11 @@ export default function OnboardingPage() {
     setSlugStatus(ok ? 'available' : 'taken');
   };
 
-  const handleSlugChange = (value) => {
+  const handleSlugChange = (value, isUserEdit = true) => {
     const cleaned = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
     setSlug(cleaned);
     setSlugStatus(null);
+    if (isUserEdit) setSlugTouched(true);
     if (slugDebounceRef.current) clearTimeout(slugDebounceRef.current);
     if (cleaned.length >= 3) {
       slugDebounceRef.current = setTimeout(() => checkSlug(cleaned), 400);
@@ -68,8 +70,11 @@ export default function OnboardingPage() {
 
   const handleNameChange = (value) => {
     setName(value);
-    const newSlug = generateSlug(value);
-    handleSlugChange(newSlug);
+    // Solo regenerar slug automáticamente si el user no lo ha editado a mano
+    if (!slugTouched) {
+      const newSlug = generateSlug(value);
+      handleSlugChange(newSlug, false);
+    }
   };
 
   const canContinueStep1 = name.trim().length >= 2 && slug.length >= 3 && slugStatus === 'available';

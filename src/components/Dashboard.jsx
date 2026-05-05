@@ -1,14 +1,18 @@
 import { Users, Calendar, DollarSign, TrendingUp, AlertTriangle, CheckCircle, Info, XCircle, Car } from 'lucide-react';
 import { formatCOP, formatDate } from '../utils/format';
 import { usePatients, useAppointments, useJornadas, useLeads, useTransactions, useAlerts } from '../hooks/useTenantData';
+import LoadingState from './LoadingState';
 
 export default function Dashboard({ onNavigate }) {
-  const { patients } = usePatients();
-  const { appointments } = useAppointments();
-  const { jornadas } = useJornadas();
+  const { patients, loading: lP } = usePatients();
+  const { appointments, loading: lA } = useAppointments();
+  const { jornadas, loading: lJ } = useJornadas();
   const { leads } = useLeads();
-  const { transactions } = useTransactions();
+  const { transactions, loading: lT } = useTransactions();
   const { alerts } = useAlerts();
+
+  const isLoading = lP && lA && lJ && lT && patients.length === 0 && appointments.length === 0;
+  if (isLoading) return <LoadingState message="Cargando tu dashboard..." size="lg" />;
 
   const todayStr = new Date().toISOString().split('T')[0];
   const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);

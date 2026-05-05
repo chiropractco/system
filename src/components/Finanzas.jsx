@@ -1,15 +1,19 @@
 import { useState } from 'react';
-import { TrendingUp, AlertTriangle, Building2, MapPin, ArrowUpRight, ArrowDownRight, Plus, X } from 'lucide-react';
+import { TrendingUp, AlertTriangle, Building2, MapPin, ArrowUpRight, ArrowDownRight, Plus, X, Download } from 'lucide-react';
 import { formatCOP } from '../utils/format';
 import { useTransactions, useAppointments, usePatients } from '../hooks/useTenantData';
 import { useToast } from './Toast';
 import { userFriendlyError } from '../lib/logger';
+import LoadingState from './LoadingState';
+import { downloadCsv } from '../utils/csv';
 
 export default function Finanzas() {
   const { transactions, loading, insertTransaction } = useTransactions();
   const { appointments } = useAppointments();
   const { patients } = usePatients();
   const toast = useToast();
+
+  if (loading && transactions.length === 0) return <LoadingState message="Cargando finanzas..." />;
   const [showNewForm, setShowNewForm] = useState(false);
 
   const incomes = transactions.filter((t) => t.type === 'income');
@@ -66,12 +70,30 @@ export default function Finanzas() {
           <h2 className="text-2xl font-bold text-on-surface">Finanzas</h2>
           <p className="text-on-surface-variant text-sm mt-1">Reporte financiero y proyecciones</p>
         </div>
-        <button
-          onClick={() => setShowNewForm(true)}
-          className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
-        >
-          <Plus size={16} /> Registrar Ingreso
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => downloadCsv(
+              `transacciones-${new Date().toISOString().slice(0,10)}.csv`,
+              transactions,
+              [
+                { key: 'date', label: 'Fecha' },
+                { key: 'type', label: 'Tipo' },
+                { key: 'category', label: 'Categoría' },
+                { key: 'description', label: 'Descripción' },
+                { key: 'amount', label: 'Monto', format: (v) => v ?? 0 },
+              ]
+            )}
+            className="hidden sm:inline-flex items-center gap-2 px-3 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-low rounded-lg text-sm font-medium transition-colors"
+          >
+            <Download size={16} /> Exportar
+          </button>
+          <button
+            onClick={() => setShowNewForm(true)}
+            className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+          >
+            <Plus size={16} /> Registrar Ingreso
+          </button>
+        </div>
       </div>
 
       {/* Income Cards */}

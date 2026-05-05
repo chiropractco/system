@@ -38,6 +38,15 @@ export function useTenantData(table, options = {}) {
     fetchAll();
   }, [fetchAll]);
 
+  // Refetch al volver a la pestaña (catch up de cambios mientras estuvo en background)
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') fetchAll();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [fetchAll]);
+
   const insert = async (record) => {
     if (!tenant?.id) return { error: 'No tenant' };
     const { data: row, error: insertError } = await supabase
@@ -103,7 +112,7 @@ export function useJornadas() {
   const { data, loading, error, insert, update, remove, refetch } = useTenantData('jornadas', {
     order: { column: 'date', ascending: true },
   });
-  return { jornadas: data, loading, error, insertJornada: insert, updateJornada: update, refetchJornadas: refetch };
+  return { jornadas: data, loading, error, insertJornada: insert, updateJornada: update, removeJornada: remove, refetchJornadas: refetch };
 }
 
 export function useLeads() {
@@ -114,10 +123,10 @@ export function useLeads() {
 }
 
 export function useTransactions() {
-  const { data, loading, error, insert, update, refetch } = useTenantData('transactions', {
+  const { data, loading, error, insert, update, remove, refetch } = useTenantData('transactions', {
     order: { column: 'date', ascending: false },
   });
-  return { transactions: data, loading, error, insertTransaction: insert, updateTransaction: update, refetchTransactions: refetch };
+  return { transactions: data, loading, error, insertTransaction: insert, updateTransaction: update, removeTransaction: remove, refetchTransactions: refetch };
 }
 
 export function useAlerts() {
