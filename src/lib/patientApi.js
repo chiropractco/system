@@ -134,3 +134,28 @@ export async function getSaleDetail(token, saleId) {
     token,
   });
 }
+
+// ============== Sprint 1.3 ==============
+export async function updateProfile(token, fields) {
+  return fnFetch('/patient-me', {
+    method: 'POST',
+    body: { action: 'update_profile', ...fields },
+    token,
+  });
+}
+
+export async function listJornadas(token, limit = 10) {
+  return fnFetch('/patient-me', {
+    method: 'POST',
+    body: { action: 'list_jornadas', limit },
+    token,
+  });
+}
+
+export async function bookJornada(token, jornadaId, notes) {
+  return fnFetch('/patient-me', {
+    method: 'POST',
+    body: { action: 'book_jornada', jornada_id: jornadaId, notes },
+    token,
+  });
+}

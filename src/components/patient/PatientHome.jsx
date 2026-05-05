@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  Calendar, ChevronRight, CreditCard, ExternalLink, FileText,
-  LogOut, MapPin, Receipt, Stethoscope, User,
+  Calendar, ChevronRight, CreditCard, Edit3, ExternalLink, FileText,
+  LogOut, MapPin, Receipt, Sparkles, Stethoscope, User, Users,
 } from 'lucide-react';
 import { usePatientAuth } from '../../contexts/PatientAuthContext';
 import { useToast } from '../Toast';
+import { listJornadas } from '../../lib/patientApi';
 import {
-  AppointmentDetailModal, CancelAppointmentModal,
-  RescheduleModal, SaleDetailModal,
+  AppointmentDetailModal, BookJornadaModal, CancelAppointmentModal,
+  EditProfileModal, RescheduleModal, SaleDetailModal,
 } from './PatientModals';
 
 const CLINIC_NAME = import.meta.env.VITE_CLINIC_NAME || 'chiropract.co';
@@ -55,6 +56,21 @@ export default function PatientHome() {
   const [cancelAppt, setCancelAppt] = useState(null);
   const [rescheduleAppt, setRescheduleAppt] = useState(null);
   const [saleDetailId, setSaleDetailId] = useState(null);
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [bookingJornada, setBookingJornada] = useState(null);
+
+  // Jornadas (lazy load — solo si la sección está montada)
+  const [jornadas, setJornadas] = useState(null);
+  const [loadingJornadas, setLoadingJornadas] = useState(false);
+
+  useEffect(() => {
+    if (!session?.session_token) return;
+    setLoadingJornadas(true);
+    listJornadas(session.session_token, 5)
+      .then(setJornadas)
+      .catch(() => setJornadas([]))
+      .finally(() => setLoadingJornadas(false));
+  }, [session?.session_token, dashboard?.patient?.id]);
 
   if (loading && !dashboard) {
     return (
@@ -88,6 +104,10 @@ export default function PatientHome() {
   const onActionSuccess = (msg) => {
     toast.success(msg);
     refresh();
+    // Recargar jornadas tras booking exitoso para reflejar capacidad/already_booked
+    if (session?.session_token) {
+      listJornadas(session.session_token, 5).then(setJornadas).catch(() => {});
+    }
   };
   const onActionError = (msg) => toast.error(msg);
 
@@ -117,14 +137,21 @@ export default function PatientHome() {
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Saludo */}
         <section className="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-12 h-12 rounded-full clinical-gradient flex items-center justify-center text-on-primary">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full clinical-gradient flex items-center justify-center text-on-primary flex-shrink-0">
               <User size={22} />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-on-surface">Hola, {patient.full_name?.split(' ')[0] || 'paciente'}</h1>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl font-bold text-on-surface truncate">Hola, {patient.full_name?.split(' ')[0] || 'paciente'}</h1>
               <p className="text-sm text-on-surface-variant">{patient.appointments_count || 0} citas en total</p>
             </div>
+            <button
+              onClick={() => setEditProfileOpen(true)}
+              className="flex items-center gap-1.5 text-sm font-medium text-on-surface-variant hover:text-primary px-3 py-2 rounded-lg hover:bg-surface-container-low transition-colors flex-shrink-0"
+            >
+              <Edit3 size={14} />
+              <span className="hidden sm:inline">Editar</span>
+            </button>
           </div>
         </section>
 
@@ -256,6 +283,63 @@ export default function PatientHome() {
           )}
         </section>
 
+        {/* Jornadas reservables */}
+        {jornadas && jornadas.length > 0 && (
+          <section>
+            <h2 className="text-sm font-bold text-on-surface uppercase tracking-wide mb-2 px-1 flex items-center gap-2">
+              <Sparkles size={14} />
+              Próximas jornadas
+            </h2>
+            <p className="text-xs text-on-surface-variant px-1 mb-2">
+              El Dr. Miguel viaja a estas ciudades. Reserva tu lugar antes de que se llenen.
+            </p>
+            <div className="space-y-2">
+              {jornadas.map((j) => {
+                const isFull = j.available_spots <= 0;
+                const dateLabel = formatDate(j.date);
+                return (
+                  <div
+                    key={j.id}
+                    className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="min-w-0">
+                        <p className="text-base font-bold text-on-surface flex items-center gap-1.5">
+                          <MapPin size={14} className="text-primary" />
+                          {j.city}
+                        </p>
+                        <p className="text-sm text-on-surface-variant capitalize">{dateLabel}</p>
+                      </div>
+                      <p className="text-sm font-bold text-primary whitespace-nowrap">
+                        {formatCOP(j.price_per_patient)}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 pt-2 border-t border-outline-variant">
+                      <span className="text-xs text-on-surface-variant flex items-center gap-1">
+                        <Users size={12} />
+                        {isFull ? 'Llena' : `${j.available_spots} cupos`}
+                      </span>
+                      {j.already_booked ? (
+                        <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full">
+                          Ya reservada
+                        </span>
+                      ) : (
+                        <button
+                          disabled={isFull}
+                          onClick={() => setBookingJornada(j)}
+                          className="text-xs font-bold px-4 py-2 rounded-full bg-primary text-on-primary hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+                        >
+                          {isFull ? 'Llena' : 'Reservar lugar'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         <p className="text-center text-xs text-on-surface-variant pt-4 pb-2">
           ¿Necesitas algo? Escríbenos por WhatsApp.
         </p>
@@ -299,6 +383,24 @@ export default function PatientHome() {
         saleId={saleDetailId}
         open={!!saleDetailId}
         onClose={() => setSaleDetailId(null)}
+        onError={onActionError}
+      />
+
+      <EditProfileModal
+        token={session?.session_token}
+        patient={patient}
+        open={editProfileOpen}
+        onClose={() => setEditProfileOpen(false)}
+        onSuccess={onActionSuccess}
+        onError={onActionError}
+      />
+
+      <BookJornadaModal
+        token={session?.session_token}
+        jornada={bookingJornada}
+        open={!!bookingJornada}
+        onClose={() => setBookingJornada(null)}
+        onSuccess={onActionSuccess}
         onError={onActionError}
       />
     </div>

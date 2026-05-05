@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import {
-  AlertTriangle, Calendar, Clock, FileText, Loader2, MapPin,
-  MessageSquare, Receipt, Stethoscope, X,
+  AlertTriangle, Calendar, Clock, FileText, Loader2, Mail, MapPin,
+  MessageSquare, Receipt, Stethoscope, Users, X,
 } from 'lucide-react';
-import { cancelAppointment, getSaleDetail, requestReschedule } from '../../lib/patientApi';
+import {
+  bookJornada, cancelAppointment, getSaleDetail,
+  requestReschedule, updateProfile,
+} from '../../lib/patientApi';
 
 // ===========================================================================
 // BaseModal — wrapper común
@@ -322,6 +325,202 @@ export function RescheduleModal({ token, appointment, open, onClose, onSuccess, 
             className="flex-1 px-4 py-3 clinical-gradient text-on-primary rounded-xl text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {loading ? <Loader2 size={16} className="animate-spin" /> : 'Enviar solicitud'}
+          </button>
+        </div>
+      </form>
+    </BaseModal>
+  );
+}
+
+// ===========================================================================
+// EditProfileModal — patient edits email / address / city
+// ===========================================================================
+export function EditProfileModal({ token, patient, open, onClose, onSuccess, onError }) {
+  const [email, setEmail] = useState('');
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (open && patient) {
+      setEmail(patient.email || '');
+      setAddress(patient.address || '');
+      setCity(patient.city || '');
+    }
+  }, [open, patient]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await updateProfile(token, {
+        email: email.trim() || null,
+        address: address.trim() || null,
+        city: city.trim() || null,
+      });
+      onSuccess?.('Perfil actualizado');
+      onClose();
+    } catch (e) {
+      onError?.(e.message || 'No pudimos actualizar el perfil');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!patient) return null;
+
+  return (
+    <BaseModal open={open} onClose={onClose} title="Editar mis datos">
+      <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <div className="bg-surface-container-low rounded-xl p-3 text-xs text-on-surface-variant">
+          <p>Tu nombre y teléfono solo los puede cambiar el consultorio. Para cualquier otro dato, escríbenos por WhatsApp.</p>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-on-surface-variant block mb-1.5">
+            Email
+          </label>
+          <div className="relative">
+            <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="tu@email.com"
+              className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-on-surface-variant block mb-1.5">
+            Dirección
+          </label>
+          <input
+            type="text"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="Calle 100 # 15-30"
+            maxLength={200}
+            className="w-full px-3 py-2.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-on-surface-variant block mb-1.5">
+            Ciudad
+          </label>
+          <input
+            type="text"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            placeholder="Bogotá"
+            maxLength={80}
+            className="w-full px-3 py-2.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+          />
+        </div>
+
+        <div className="flex gap-2 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={loading}
+            className="flex-1 px-4 py-3 border border-outline-variant text-on-surface-variant rounded-xl text-sm font-medium hover:bg-surface-container-low"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 px-4 py-3 clinical-gradient text-on-primary rounded-xl text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {loading ? <Loader2 size={16} className="animate-spin" /> : 'Guardar'}
+          </button>
+        </div>
+      </form>
+    </BaseModal>
+  );
+}
+
+// ===========================================================================
+// BookJornadaModal — confirma reserva en una jornada
+// ===========================================================================
+export function BookJornadaModal({ token, jornada, open, onClose, onSuccess, onError }) {
+  const [notes, setNotes] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (open) setNotes('');
+  }, [open]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const result = await bookJornada(token, jornada.id, notes.trim() || null);
+      onSuccess?.(`Reserva confirmada para la jornada en ${result.jornada_city}`);
+      onClose();
+    } catch (e) {
+      onError?.(e.message || 'No pudimos confirmar la reserva');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!jornada) return null;
+
+  return (
+    <BaseModal open={open} onClose={onClose} title="Reservar jornada">
+      <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <div className="bg-surface-container-low rounded-xl p-4 space-y-2">
+          <p className="text-lg font-bold text-on-surface flex items-center gap-2">
+            <MapPin size={18} className="text-primary" />
+            {jornada.city}
+          </p>
+          <p className="text-sm text-on-surface-variant capitalize">
+            {formatDate(jornada.date)}
+          </p>
+          <div className="flex items-center justify-between pt-2 border-t border-outline-variant">
+            <span className="text-sm text-on-surface-variant flex items-center gap-1">
+              <Users size={14} /> {jornada.available_spots} cupos disponibles
+            </span>
+            <span className="text-lg font-bold text-primary">{formatCOP(jornada.price_per_patient)}</span>
+          </div>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-on-surface-variant block mb-1.5">
+            ¿Algo que el doctor deba saber? (opcional)
+          </label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={3}
+            maxLength={300}
+            placeholder="Ej: Tengo dolor en zona lumbar"
+            className="w-full px-3 py-2.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary resize-none"
+          />
+        </div>
+
+        <p className="text-xs text-on-surface-variant">
+          El consultorio recibirá tu reserva y te confirmará el horario exacto por WhatsApp.
+        </p>
+
+        <div className="flex gap-2 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={loading}
+            className="flex-1 px-4 py-3 border border-outline-variant text-on-surface-variant rounded-xl text-sm font-medium hover:bg-surface-container-low"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 px-4 py-3 clinical-gradient text-on-primary rounded-xl text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {loading ? <Loader2 size={16} className="animate-spin" /> : 'Confirmar reserva'}
           </button>
         </div>
       </form>

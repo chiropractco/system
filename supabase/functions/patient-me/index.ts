@@ -107,6 +107,46 @@ Deno.serve(async (req) => {
         return jsonResponse(data);
       }
 
+      if (action === 'update_profile') {
+        const { data, error } = await supabase.rpc('patient_update_profile', {
+          p_token: token,
+          p_email: body.email ?? null,
+          p_address: body.address ?? null,
+          p_city: body.city ?? null,
+        });
+        if (error) {
+          console.error('patient_update_profile', error);
+          return jsonResponse({ error: error.message }, 400);
+        }
+        return jsonResponse(data);
+      }
+
+      if (action === 'list_jornadas') {
+        const { data, error } = await supabase.rpc('patient_list_jornadas', {
+          p_token: token,
+          p_limit: body.limit || 10,
+        });
+        if (error) {
+          console.error('patient_list_jornadas', error);
+          return jsonResponse({ error: error.message }, 400);
+        }
+        return jsonResponse(data);
+      }
+
+      if (action === 'book_jornada') {
+        if (!body?.jornada_id) return jsonResponse({ error: 'Falta jornada_id' }, 400);
+        const { data, error } = await supabase.rpc('patient_book_jornada', {
+          p_token: token,
+          p_jornada_id: body.jornada_id,
+          p_notes: body.notes || null,
+        });
+        if (error) {
+          console.error('patient_book_jornada', error);
+          return jsonResponse({ error: error.message }, 400);
+        }
+        return jsonResponse(data);
+      }
+
       return jsonResponse({ error: 'Acción desconocida' }, 400);
     }
 
