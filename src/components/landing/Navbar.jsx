@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, LogIn } from 'lucide-react';
+import { Menu, X, LogIn, User as UserIcon } from 'lucide-react';
 import { wa, clinic } from '../../lib/clinic';
 
 const navLinks = [
@@ -15,6 +15,10 @@ export default function Navbar() {
 
   const goToCRM = () => {
     window.location.hash = 'crm';
+  };
+
+  const goToPatient = () => {
+    window.location.hash = 'paciente';
   };
 
   useEffect(() => {
@@ -60,6 +64,13 @@ export default function Navbar() {
               Agendar Cita
             </a>
             <button
+              onClick={goToPatient}
+              className="flex items-center gap-1.5 text-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
+              title="Acceso para pacientes"
+            >
+              <UserIcon size={16} /> Soy paciente
+            </button>
+            <button
               onClick={goToCRM}
               className="flex items-center gap-1.5 text-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
             >
@@ -84,6 +95,18 @@ export default function Navbar() {
                 {link.label}
               </a>
             ))}
+            <button
+              onClick={() => { setOpen(false); goToPatient(); }}
+              className="flex items-center gap-1.5 py-2 text-sm font-medium text-on-surface-variant hover:text-primary"
+            >
+              <UserIcon size={16} /> Soy paciente
+            </button>
+            <button
+              onClick={() => { setOpen(false); goToCRM(); }}
+              className="flex items-center gap-1.5 py-2 text-sm font-medium text-on-surface-variant hover:text-primary"
+            >
+              <LogIn size={16} /> CRM
+            </button>
           </div>
         )}
       </nav>

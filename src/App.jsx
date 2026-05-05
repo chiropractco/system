@@ -26,6 +26,9 @@ import ContactSection from './components/landing/ContactSection';
 import WhatsAppFAB from './components/landing/WhatsAppFAB';
 import LegalPage from './components/landing/LegalPage';
 
+// Patient panel
+import PatientApp from './components/patient/PatientApp';
+
 function CRMApp() {
   const [activeModule, setActiveModule] = useState('dashboard');
   const { alerts } = useAlerts();
@@ -104,6 +107,7 @@ function LandingApp() {
 function getViewFromHash() {
   const h = window.location.hash;
   if (h === '#crm') return 'crm';
+  if (h === '#paciente' || h === '#patient') return 'patient';
   if (h === '#terms') return 'terms';
   if (h === '#privacy') return 'privacy';
   return 'landing';
@@ -142,6 +146,9 @@ function AppRouter() {
   // Legal pages — públicas, accesibles desde cualquier estado
   if (view === 'terms') return <LegalPage doc="terms" onBack={goToLanding} />;
   if (view === 'privacy') return <LegalPage doc="privacy" onBack={goToLanding} />;
+
+  // Patient panel — pública (auth propia vía OTP, independiente del CRM)
+  if (view === 'patient') return <PatientApp onBack={goToLanding} />;
 
   // Auth flow
   if (!user) {

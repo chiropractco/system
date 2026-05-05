@@ -30,4 +30,6 @@ dist-ssr
 
 .vercel
 
-.vercel
+# Supabase CLI local state (no secretos, pero específico de máquina)
+supabase/.temp/
+supabase/.branches/
