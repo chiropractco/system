@@ -3,6 +3,7 @@ import { Package, Stethoscope, ShoppingCart, Plus, Edit2, Trash2, X, AlertTriang
 import { useServices, useProducts, useSales } from '../hooks/useTenantData';
 import { formatCOP, formatShortDate } from '../utils/format';
 import { userFriendlyError } from '../lib/logger';
+import EmitInvoiceButton from './billing/EmitInvoiceButton';
 
 const SERVICE_CATEGORIES = [
   { value: 'consulta', label: 'Consulta' },
@@ -538,7 +539,7 @@ function ProductForm({ product, onSave, onCancel }) {
 // VENTAS
 // ===========================
 function SalesTab() {
-  const { sales, loading, createSale, cancelSale } = useSales();
+  const { sales, loading, createSale, cancelSale, refetchSales } = useSales();
   const { services } = useServices();
   const { products } = useProducts();
   const [showForm, setShowForm] = useState(false);
@@ -624,7 +625,7 @@ function SalesTab() {
       ) : (
         <div className="space-y-2">
           {sales.map((s) => (
-            <SaleCard key={s.id} sale={s} onCancel={cancelSale} />
+            <SaleCard key={s.id} sale={s} onCancel={cancelSale} onInvoiceEmitted={refetchSales} />
           ))}
         </div>
       )}
@@ -641,7 +642,7 @@ function SalesTab() {
   );
 }
 
-function SaleCard({ sale, onCancel }) {
+function SaleCard({ sale, onCancel, onInvoiceEmitted }) {
   const [expanded, setExpanded] = useState(false);
   const statusStyle = {
     completada: 'bg-green-100 text-green-700',
@@ -658,12 +659,25 @@ function SaleCard({ sale, onCancel }) {
             <span className="font-semibold text-on-surface">{formatCOP(sale.total)}</span>
             <span className={`text-xs px-2 py-0.5 rounded-full ${statusStyle}`}>{sale.status}</span>
             <span className="text-xs text-on-surface-variant">{sale.payment_method}</span>
+            {sale.status === 'completada' && (
+              <EmitInvoiceButton sale={sale} onEmitted={onInvoiceEmitted} compact />
+            )}
           </div>
           <div className="flex items-center gap-3 mt-1 text-xs text-on-surface-variant">
             <span className="flex items-center gap-1"><Calendar size={12} /> {formatShortDate(sale.date)}</span>
             {sale.patients?.full_name && <span>· {sale.patients.full_name}</span>}
             {sale.jornadas?.city && <span className="flex items-center gap-1">· <MapPin size={12} /> {sale.jornadas.city}</span>}
           </div>
+          {sale.e_invoice_pdf_url && (
+            <a
+              href={sale.e_invoice_pdf_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-primary hover:underline mt-1 inline-flex items-center gap-1"
+            >
+              📄 Descargar PDF de factura
+            </a>
+          )}
         </div>
         <div className="flex gap-1">
           <button

@@ -362,6 +362,8 @@ export default function Pacientes() {
                 status: form.status.value,
                 treatment: form.treatment.value || null,
                 notes: form.notes.value || null,
+                id_type: form.id_type.value || null,
+                id_number: form.id_number.value?.replace(/\D/g, '') || null,
               });
               if (result.error) {
                 toast.error(userFriendlyError(result.error));
@@ -374,6 +376,21 @@ export default function Pacientes() {
                 <div className="col-span-2">
                   <label className="text-xs text-on-surface-variant block mb-1">Nombre completo</label>
                   <input name="full_name" required className="w-full px-3 py-2 rounded-lg border border-outline-variant text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Nombre completo" />
+                </div>
+                <div>
+                  <label className="text-xs text-on-surface-variant block mb-1">Tipo doc</label>
+                  <select name="id_type" className="w-full px-3 py-2 rounded-lg border border-outline-variant text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+                    <option value="">—</option>
+                    <option value="CC">CC</option>
+                    <option value="CE">CE</option>
+                    <option value="TI">TI</option>
+                    <option value="NIT">NIT</option>
+                    <option value="PA">Pasaporte</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-on-surface-variant block mb-1">N° identificación <span className="text-on-surface-variant/60">(para facturar)</span></label>
+                  <input name="id_number" inputMode="numeric" className="w-full px-3 py-2 rounded-lg border border-outline-variant text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="1234567890" />
                 </div>
                 <div>
                   <label className="text-xs text-on-surface-variant block mb-1">Teléfono</label>
@@ -436,6 +453,8 @@ export default function Pacientes() {
                 status: form.status.value,
                 treatment: form.treatment.value || null,
                 notes: form.notes.value || null,
+                id_type: form.id_type.value || null,
+                id_number: form.id_number.value?.replace(/\D/g, '') || null,
               });
               if (r.error) { toast.error(userFriendlyError(r.error)); return; }
               toast.success('Paciente actualizado');
@@ -446,6 +465,21 @@ export default function Pacientes() {
                 <div className="col-span-2">
                   <label className="text-xs text-on-surface-variant block mb-1">Nombre completo</label>
                   <input name="full_name" required defaultValue={selectedPatient.name} className="w-full px-3 py-2 rounded-lg border border-outline-variant text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                </div>
+                <div>
+                  <label className="text-xs text-on-surface-variant block mb-1">Tipo doc</label>
+                  <select name="id_type" defaultValue={selectedPatient.id_type || ''} className="w-full px-3 py-2 rounded-lg border border-outline-variant text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+                    <option value="">—</option>
+                    <option value="CC">CC</option>
+                    <option value="CE">CE</option>
+                    <option value="TI">TI</option>
+                    <option value="NIT">NIT</option>
+                    <option value="PA">Pasaporte</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-on-surface-variant block mb-1">N° identificación</label>
+                  <input name="id_number" defaultValue={selectedPatient.id_number || ''} inputMode="numeric" className="w-full px-3 py-2 rounded-lg border border-outline-variant text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Para facturar" />
                 </div>
                 <div>
                   <label className="text-xs text-on-surface-variant block mb-1">Teléfono</label>

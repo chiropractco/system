@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Settings as SettingsIcon, Building2, User, CreditCard, Shield, Save, CheckCircle, MessageCircle, Clock, Users } from 'lucide-react';
+import { Settings as SettingsIcon, Building2, User, CreditCard, Shield, Save, CheckCircle, MessageCircle, Clock, Users, FileText } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { wa } from '../lib/clinic';
 import TeamTab from './TeamTab';
+import BillingSettings from './billing/BillingSettings';
 
 export default function Settings() {
   const { tenant, profile, updateProfile, updateTenant } = useAuth();
@@ -46,6 +47,7 @@ export default function Settings() {
   const tabs = [
     { id: 'clinic', label: 'Consultorio', icon: Building2 },
     { id: 'team', label: 'Equipo', icon: Users },
+    { id: 'billing', label: 'Facturación DIAN', icon: FileText },
     { id: 'profile', label: 'Mi Perfil', icon: User },
     { id: 'plan', label: 'Plan', icon: CreditCard },
   ];
@@ -151,6 +153,9 @@ export default function Settings() {
 
       {/* Team Tab */}
       {activeTab === 'team' && <TeamTab />}
+
+      {/* Billing DIAN Tab */}
+      {activeTab === 'billing' && <BillingSettings />}
 
       {/* Profile Tab */}
       {activeTab === 'profile' && (

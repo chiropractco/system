@@ -638,6 +638,33 @@ export function SaleDetailModal({ token, saleId, open, onClose, onError }) {
               )}
             </div>
           )}
+
+          {/* Factura electrónica DIAN */}
+          {data.sale?.e_invoice_status === 'accepted' || data.sale?.e_invoice_status === 'sent' ? (
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 text-sm">
+              <p className="font-semibold text-on-surface flex items-center gap-1.5">
+                📡 Factura electrónica DIAN
+              </p>
+              <p className="text-xs text-on-surface-variant mt-1">
+                <b>N°:</b> {data.sale.e_invoice_number}
+              </p>
+              {data.sale.e_invoice_cufe && (
+                <p className="text-[10px] text-on-surface-variant break-all mt-0.5">
+                  <b>CUFE:</b> {data.sale.e_invoice_cufe}
+                </p>
+              )}
+              {data.sale.e_invoice_pdf_url && (
+                <a
+                  href={data.sale.e_invoice_pdf_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center gap-1 text-xs text-primary font-bold hover:underline"
+                >
+                  📄 Descargar PDF de la factura
+                </a>
+              )}
+            </div>
+          ) : null}
         </div>
       )}
     </BaseModal>
